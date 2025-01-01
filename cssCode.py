@@ -8,9 +8,15 @@ from typing import Dict, Set, List
 
 class cssCode:
 
-    def __init__(self,code:Dict[bool,List[Set[int]]]):
+    def __init__(self,Sx:List[Set[int]],Sz:List[Set[int]]) -> None:
+        r"""
+        Initialize a CSS code instance
+        """
 
-        pass 
+        self.code = {False:Sx,True:Sz}
+
+        assert commutation_test(Sx,Sz)
+
+        self.qubits = set.union(*(Sx+Sz))
 
 
-    pass
