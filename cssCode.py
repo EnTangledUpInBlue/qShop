@@ -5,6 +5,7 @@
 import math
 import numpy as np
 from typing import Dict, Set, List
+from code_tools import commutation_test
 
 class cssCode:
 
@@ -13,10 +14,9 @@ class cssCode:
         Initialize a CSS code instance
         """
 
-        self.code = {False:Sx,True:Sz}
-
         assert commutation_test(Sx,Sz)
 
+        self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
 
 
