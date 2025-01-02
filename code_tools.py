@@ -46,6 +46,10 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         return full_set_list
     
 def generate_label_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+    r"""
+    Takes a list of sets and labels them according to the ordering in order_set_list
+
+    """
 
     label_dict = dict()
 
@@ -53,29 +57,25 @@ def generate_label_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
 
     for i in range(len(set_list_ordered)):
         label_dict[i] = set_list_ordered[i]
-        
+
     return label_dict
 
 
 
 def max_elem(S:List[Set[int]]) -> int:
-    
-    max_elem = 0
+    r"""
+    Takes in a list of sets of non-negative integers and outputs the maximum element over all sets
+    """
 
-    for subset in S:
-        if max(subset)>max_elem:
-            max_elem = max(subset)
+    full_set = set.union(*S)
+
+    return max(full_set)
     
-    return max_elem
 
 def min_elem(S:List[Set[int]]) -> int:
-
-    assert len(S)>0
-
-    min_elem = min(S[0])
-
-    for subset in S[1:]:
-        if min(subset)<min_elem:
-            min_elem = min(subset)
+    r"""
+    Takes in a list of sets of non-negative integers and outputs the minimum element over all sets
+    """
+    full_set = set.union(*S)
     
-    return min_elem
+    return min(full_set)
