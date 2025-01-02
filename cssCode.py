@@ -5,7 +5,7 @@
 import math
 import numpy as np
 from typing import Dict, Set, List
-from code_tools import commutation_test
+from code_tools import commutation_test, order_set_list
 
 class cssCode:
 
@@ -18,5 +18,19 @@ class cssCode:
 
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
+
+        
+
+
+    def to_check_matrices(self) -> List[List[List[int]]]:
+
+
+        Hx = []
+        Hz = []
+
+
+        return Hx,Hz
+
+
 
 
