@@ -5,7 +5,7 @@
 import math
 import numpy as np
 from typing import Dict, Set, List
-from code_tools import commutation_test, order_set_list
+from code_tools import commutation_test, order_set_list, generate_label_dict
 
 class cssCode:
 
@@ -18,19 +18,24 @@ class cssCode:
 
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
+        self.check_labels = {False:generate_label_dict(Sx), True:generate_label_dict(Sz)}
 
         
-
+    ## Include methods for producing check matrices and Tanner graphs
+    ## Can also change the presentation of a given linear code
 
     def to_check_matrices(self) -> List[List[List[int]]]:
+        check_matrices = []
+        
+        for sector in [False,True]:
+            labeler = self.check_labels[sector]
+            chk_mat = np.zeros(shape=[len(labeler),len(self.qubits)],dtype=int)
+            for row_label in labeler:
+                for col_label in list(labeler[row_label]):
+                    chk_mat[row_label,col_label] = 1
+            check_matrices.append(chk_mat)
 
-
-        Hx = []
-        Hz = []
-
-
-        return Hx,Hz
-
+        return check_matrices
 
 
 

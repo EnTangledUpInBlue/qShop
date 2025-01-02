@@ -44,6 +44,18 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
             full_set_list.extend(closing_set)
         
         return full_set_list
+    
+def generate_label_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+
+    label_dict = dict()
+
+    set_list_ordered = order_set_list(set_list)
+
+    for i in range(len(set_list_ordered)):
+        label_dict[i] = set_list_ordered[i]
+        
+    return label_dict
+
 
 
 def max_elem(S:List[Set[int]]) -> int:
