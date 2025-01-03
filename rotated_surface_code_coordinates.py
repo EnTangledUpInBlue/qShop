@@ -1,6 +1,13 @@
 from typing import List,Set,Dict,Tuple
 
 def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
+    r"""
+    Coordinates for the qubit locations in the rotated surface code. A factor of 2 is included to allow for 
+    checks to be located at integer coordinates.
+
+    :param L: The dimensions of the square lattice for the rotated surface code.
+
+    """
 
     if L==1:
         return set([(0,0)])
@@ -17,6 +24,12 @@ def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
         return Lset
 
 def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
+    r"""
+    Coordinates for the check locations in the rotated surface code
+
+    :param L: The dimensions of the square lattice for the rotated surface code.
+    
+    """
 
     if L==3:
         xcheck_coords = {(-1,1), (1,3), (3,1), (5,3)}
@@ -58,7 +71,12 @@ def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
         return xcheck_coords,zcheck_coords
 
 def rsurf_q2i(L:int) -> Dict[Tuple[int,int],int]:
+    r"""
+    Creates a dictionary mapping qubit coordinates to integer labels
 
+    :param L: The dimensions of the square lattice for the rotated surface code.
+    
+    """
     qcoords = rsurf_qubit_coords(L)
 
     q2i:Dict[Tuple[int,int],int] = {q: i for i,q in enumerate(sorted(qcoords, key=lambda v:(v[0],v[1])))}
@@ -66,7 +84,12 @@ def rsurf_q2i(L:int) -> Dict[Tuple[int,int],int]:
     return q2i
 
 def rsurf_c2i(L:int) -> Dict[bool,Dict[Tuple[int,int],int]]:
+    r"""
+    Creates a dictionary mapping check coordinates to integer labels.
 
+    :param L: The dimensions of the square lattice for the rotated surface code.
+    
+    """
     xcoords,zcoords = rsurf_check_coords(L)
 
     x2i:Dict[Tuple[int,int],int] = {x: i for i,x in enumerate(sorted(xcoords,key = lambda v:(v[0],v[1])))}
@@ -76,7 +99,13 @@ def rsurf_c2i(L:int) -> Dict[bool,Dict[Tuple[int,int],int]]:
     return {False:x2i,True:z2i}
 
 def rsurf_stabilizer_generators(L:int) -> List[List[Set[int]]]:
+    r"""
+    Function to use specify the set of generating operators for the rotated surface code.
+    Qubits are labeled according to the function q2i.
 
+    :param L: The dimensions of the square lattice for the rotated surface code.
+    
+    """
     q2i = rsurf_q2i(L)
     c2i = rsurf_c2i(L)
 
@@ -95,6 +124,10 @@ def rsurf_stabilizer_generators(L:int) -> List[List[Set[int]]]:
     return stabs
 
 def potential_nbrhd(r:Tuple[int,int]) -> List[Tuple[int,int]]:
+    r"""
+    Function for producing a set of coordinates neighboring the input tuple r
+
+    """
 
     nbrs = []
     deltas = [1,-1]
