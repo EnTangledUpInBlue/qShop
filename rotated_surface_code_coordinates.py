@@ -16,6 +16,15 @@ def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
         
         return Lset
 
+def rsurf_q2i(L:int) -> Dict[Tuple[int,int,int],int]:
+
+    qcoords = rsurf_qubit_coords(L)
+
+    q2i:Dict[Tuple[int,int],int] = {q: i for i,q in enumerate(sorted(qcoords, key=lambda v:(v[0],v[1])))}
+
+    return q2i
+
+
 def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
 
     if L==3:
