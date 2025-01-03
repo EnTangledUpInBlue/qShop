@@ -1,5 +1,12 @@
 ## parity check matrices for the repetition code
 from typing import List, Set, Dict
+from rotated_surface_code_coordinates import rsurf_stabilizer_generators
+
+def rsurf_code(L:int) -> List[List[Set[int]]]:
+
+    Sx,Sz = rsurf_stabilizer_generators(L)
+
+    return Sx,Sz
 
 def bf_rep_code(n:int) -> List[List[Set[int]]]:
 

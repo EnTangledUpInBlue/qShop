@@ -16,15 +16,6 @@ def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
         
         return Lset
 
-def rsurf_q2i(L:int) -> Dict[Tuple[int,int,int],int]:
-
-    qcoords = rsurf_qubit_coords(L)
-
-    q2i:Dict[Tuple[int,int],int] = {q: i for i,q in enumerate(sorted(qcoords, key=lambda v:(v[0],v[1])))}
-
-    return q2i
-
-
 def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
 
     if L==3:
@@ -66,3 +57,50 @@ def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
 
         return xcheck_coords,zcheck_coords
 
+def rsurf_q2i(L:int) -> Dict[Tuple[int,int],int]:
+
+    qcoords = rsurf_qubit_coords(L)
+
+    q2i:Dict[Tuple[int,int],int] = {q: i for i,q in enumerate(sorted(qcoords, key=lambda v:(v[0],v[1])))}
+
+    return q2i
+
+def rsurf_c2i(L:int) -> Dict[bool,Dict[Tuple[int,int],int]]:
+
+    xcoords,zcoords = rsurf_check_coords(L)
+
+    x2i:Dict[Tuple[int,int],int] = {x: i for i,x in enumerate(sorted(xcoords,key = lambda v:(v[0],v[1])))}
+
+    z2i:Dict[Tuple[int,int],int] = {z: i for i,z in enumerate(sorted(zcoords,key = lambda v:(v[0],v[1])))}
+
+    return {False:x2i,True:z2i}
+
+def rsurf_stabilizer_generators(L:int) -> List[List[Set[int]]]:
+
+    q2i = rsurf_q2i(L)
+    c2i = rsurf_c2i(L)
+
+    stabs = []
+
+    for sector in [False,True]:
+        sect_stabs = []
+        for check in c2i[sector]:
+            chk = set()
+            for pot_q in potential_nbrhd(check):
+                if pot_q in q2i:
+                    chk.add(q2i[pot_q])
+            sect_stabs.append(chk)
+        stabs.append(sect_stabs)
+
+    return stabs
+
+def potential_nbrhd(r:Tuple[int,int]) -> List[Tuple[int,int]]:
+
+    nbrs = []
+    deltas = [1,-1]
+
+    for x in deltas:
+        for y in deltas:
+            nbrs.append((r[0]+x,r[1]+y))
+
+    return nbrs
