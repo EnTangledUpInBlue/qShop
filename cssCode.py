@@ -4,6 +4,8 @@
 
 import math
 import numpy as np
+
+from networkx import Graph
 from typing import Dict, Set, List
 from code_tools import commutation_test, order_set_list, generate_label_dict
 
@@ -36,6 +38,23 @@ class cssCode:
             check_matrices.append(chk_mat)
 
         return check_matrices
+    
+    def check_connectivity_graph(self) -> Graph:
+
+        ccg = Graph()
+
+        for xlabel in self.check_labels[False]:
+            ccg.add_node((False,xlabel))
+
+            xcheck = self.check_labels[False][xlabel]
+
+            for zlabel in self.check_labels[True]:
+                zcheck = self.check_labels[True][zlabel]
+                if not xcheck.isdisjoint(zcheck):
+                    ccg.add_edge((False,xlabel),(True,zlabel))
+
+        return ccg
+
 
 
 
