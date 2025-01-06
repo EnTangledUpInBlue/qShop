@@ -7,7 +7,7 @@ import numpy as np
 
 from networkx import Graph
 from typing import Dict, Set, List
-from code_tools import commutation_test, order_set_list, generate_label_dict
+from code_tools import commutation_test, order_set_list, generate_check_dict
 
 class cssCode:
 
@@ -20,7 +20,7 @@ class cssCode:
 
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
-        self.check_labels = {False:generate_label_dict(Sx), True:generate_label_dict(Sz)}
+        self.check_dict = {False:generate_check_dict(Sx), True:generate_check_dict(Sz)}
 
         
     ## Include methods for producing check matrices and Tanner graphs
@@ -30,7 +30,7 @@ class cssCode:
         check_matrices = []
         
         for sector in [False,True]:
-            labeler = self.check_labels[sector]
+            labeler = self.check_dict[sector]
             chk_mat = np.zeros(shape=[len(labeler),len(self.qubits)],dtype=int)
             for row_label in labeler:
                 for col_label in list(labeler[row_label]):
@@ -39,22 +39,44 @@ class cssCode:
 
         return check_matrices
     
-    def check_connectivity_graph(self) -> Graph:
+    def check_chain_graph(self) -> Graph:
 
         ccg = Graph()
 
-        for xlabel in self.check_labels[False]:
+        for xlabel in self.check_dict[False]:
             ccg.add_node((False,xlabel))
 
-            xcheck = self.check_labels[False][xlabel]
+            xcheck = self.check_dict[False][xlabel]
 
-            for zlabel in self.check_labels[True]:
-                zcheck = self.check_labels[True][zlabel]
+            for zlabel in self.check_dict[True]:
+                zcheck = self.check_dict[True][zlabel]
                 if not xcheck.isdisjoint(zcheck):
                     ccg.add_edge((False,xlabel),(True,zlabel))
 
         return ccg
 
 
+    def check_connectivity_graphs(self) -> Dict[bool,Graph]:
+
+        z_ccg = Graph()
+        x_ccg = Graph()
+
+        for ii in range(len(self.check_dict[False])):
+            xcheck1 = self.check_dict[False][ii]
+            
+            for jj in range(ii+1,len(self.check_dict[False])):
+                xcheck2 = self.check_dict[False][jj]
+                if not xcheck1.isdisjoint(xcheck2):
+                    x_ccg.add_edge((False,ii),(False,jj))
+                
+        for ii in range(len(self.check_dict[True])):
+            zcheck1 = self.check_dict[True][ii]
+            
+            for jj in range(ii+1,len(self.check_dict[True])):
+                zcheck2 = self.check_dict[True][jj]
+                if not zcheck1.isdisjoint(zcheck2):
+                    z_ccg.add_edge((True,ii),(True,jj))
+
+        return {False:x_ccg,True:z_ccg}
 
 

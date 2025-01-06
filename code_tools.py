@@ -45,20 +45,20 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         
         return full_set_list
     
-def generate_label_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
     Takes a list of sets and labels them according to the ordering in order_set_list
 
     """
 
-    label_dict = dict()
+    check_dict = dict()
 
     set_list_ordered = order_set_list(set_list)
 
     for i in range(len(set_list_ordered)):
-        label_dict[i] = set_list_ordered[i]
+        check_dict[i] = set_list_ordered[i]
 
-    return label_dict
+    return check_dict
 
 
 
