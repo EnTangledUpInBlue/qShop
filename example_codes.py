@@ -48,8 +48,11 @@ def steane_code() -> List[List[Set[int]]]:
 def qpc(m:int,n:int) -> List[List[Set[int]]]:
 
     r"""
-    Rotated variation of the Shor familty of quantum parity check codes, with logical X
-    in terms of physical X operators and same for Z
+    Rotated variation of the Shor familty of quantum parity check codes with X (Z) type logical operators
+    expressed in terms of single qubit X (Z) operators.
+
+    :param m: size of blocks of consecutive qubit labels
+    :param n: the number of blocks of qubits
     """
 
     Sx = []
@@ -57,7 +60,7 @@ def qpc(m:int,n:int) -> List[List[Set[int]]]:
 
     nqubits = int(n*m)
 
-    ## n blocks, each with length m
+    ## n blocks, each with m consecutive qubits
 
     for i in range(n):        
         for j in range(m-1):

@@ -83,26 +83,23 @@ class cssCode:
         of the X (Z) type stabilizer generators of the code.
         """
 
+        ccg = {False:Graph(),True:Graph()}
+
         z_ccg = Graph()
         x_ccg = Graph()
 
-        for ii in range(len(self.check_dict[False])):
-            xcheck1 = self.check_dict[False][ii]
-            
-            for jj in range(ii+1,len(self.check_dict[False])):
-                xcheck2 = self.check_dict[False][jj]
-                if not xcheck1.isdisjoint(xcheck2):
-                    x_ccg.add_edge((False,ii),(False,jj))
-                
-        for ii in range(len(self.check_dict[True])):
-            zcheck1 = self.check_dict[True][ii]
-            
-            for jj in range(ii+1,len(self.check_dict[True])):
-                zcheck2 = self.check_dict[True][jj]
-                if not zcheck1.isdisjoint(zcheck2):
-                    z_ccg.add_edge((True,ii),(True,jj))
+        for sector in [False,True]:
+            for ii in range(len(self.check_dict[sector])):
+                check1 = self.check_dict[sector][ii]
+                for jj in range(ii+1,len(self.check_dict[sector])):
+                    check2 = self.check_dict[sector][jj]
+                    
+                    if not check1.isdisjoint(check2):
+                        ccg[sector].add_edge(ii,jj)
 
-        return {False:x_ccg,True:z_ccg}
+                        # ccg[sector].add_edge((sector,ii),(sector,jj))
+
+        return ccg
     
     def boundary_qubits(self) -> Dict[bool,Set[int]]:
         r"""
@@ -110,13 +107,15 @@ class cssCode:
         stabilizer generator of X (Z) type. 
         """
 
-        bdries = dict()
+        # bdries = dict()
+        bdries = {False:set(),True:set()}
+
         for sector in [False,True]:
-            sector_bdry = set()
+            # sector_bdry = set()
             for q in self.qubits:
-                if len(self.qubit_dict[sector][q])==1:
-                    sector_bdry.add(q)
-            bdries[sector] = sector_bdry
+                if len(self.qubit_dict[q][sector])==1:
+                    bdries[sector].add(q)
+            # bdries[sector] = sector_bdry
         
         return bdries
 
