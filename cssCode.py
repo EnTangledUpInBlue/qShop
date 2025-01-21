@@ -35,7 +35,7 @@ class cssCode:
         self.qubit_dict = {q:{False:xdict[q], True:zdict[q]} for q in list(self.qubits)}
         
     ## Include methods for producing check matrices and Tanner graphs
-    ## Also methods for changing the presentation of a given linear code
+    ## Also methods for changing the presentation of a given linear code, i.e., updating the code properties
 
     def to_check_matrices(self) -> Dict[bool,List[Tuple[int]]]:
         r"""
@@ -120,6 +120,19 @@ class cssCode:
         
         return bdries
 
+    def classical_bits(self) -> Dict[bool,Set[int]]:
+        r"""
+        A function that identifies any classical bits which are any qubits that are supported only on a single type of stabilizer.
+        These are returned in a dictionary that maps the boolean False (True) to the set of qubits that are solely supported on 
+        X (Z) type stabilizers.
+        """
 
-
-
+        class_bits = dict()
+        for sector in [False,True]:
+            sector_bits = set()
+            for q in self.qubits:
+                if not len(self.qubit_dict[sector][q]):
+                    sector_bits.add(q)
+            class_bits[not sector] = sector_bits
+        
+        return class_bits
