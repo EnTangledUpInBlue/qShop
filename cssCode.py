@@ -7,7 +7,7 @@ import numpy as np
 
 from networkx import Graph
 from typing import Dict, Set, List
-from code_tools import commutation_test, order_set_list, generate_check_dict
+from code_tools import commutation_test, order_set_list, generate_check_dict, generate_qubit_nbrs_dict
 
 class cssCode:
 
@@ -21,7 +21,7 @@ class cssCode:
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
         self.check_dict = {False:generate_check_dict(Sx), True:generate_check_dict(Sz)}
-
+        self.qubit_dict = {q:[generate_qubit_nbrs_dict(Sx)[q],generate_qubit_nbrs_dict(Sz)[q]] for q in list(self.qubits)}
         
     ## Include methods for producing check matrices and Tanner graphs
     ## Can also change the presentation of a given linear code

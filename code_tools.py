@@ -60,7 +60,25 @@ def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
 
     return check_dict
 
+def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+    r"""
+    A function to generate the a list containing the check operator labelst acting on the given qubit.
+    """
 
+    qubits = set.union(*set_list)
+
+    qubit_dict: Dict[int,Set[int]] = { q: set() for q in list(qubits)}
+
+    i2c = generate_check_dict(set_list)
+    c2i = {tuple(sorted(list(v))):k for k,v in i2c.items()}
+
+    for q in list(qubits):
+
+        for chk in set_list:
+            if q in chk:
+                qubit_dict[q].add(c2i[tuple(sorted(list(chk)))])
+
+    return qubit_dict
 
 def max_elem(S:List[Set[int]]) -> int:
     r"""
