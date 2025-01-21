@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 from networkx import Graph
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 from code_tools import commutation_test, order_set_list, generate_check_dict, generate_qubit_nbrs_dict
 
 class cssCode:
@@ -40,20 +40,29 @@ class cssCode:
     ## Include methods for producing check matrices and Tanner graphs
     ## Also methods for changing the presentation of a given linear code
 
-    def to_check_matrices(self) -> List[List[List[int]]]:
-        check_matrices = []
+    def to_check_matrices(self) -> Dict[bool,List[Tuple[int]]]:
+        r"""
+        Produces a dictionary mapping the boolean False (True) to the Hx (Hz) parity check matrices given in sparse coordinate list format
+        of tuples (row_label, col_label, value) where the non-zero values are always one.
+        """
+        check_matrices = dict()
         
         for sector in [False,True]:
             labeler = self.check_dict[sector]
-            chk_mat = np.zeros(shape=[len(labeler),len(self.qubits)],dtype=int)
+            entries = []
             for row_label in labeler:
                 for col_label in list(labeler[row_label]):
-                    chk_mat[row_label,col_label] = 1
-            check_matrices.append(chk_mat)
+                    entries.append((row_label,col_label,1))
+
+            check_matrices[sector] = entries
 
         return check_matrices
     
     def check_chain_graph(self) -> Graph:
+
+        r"""
+        Produces a graph describing nontrivial intersections between stabilizer generators of opposite types.
+        """
 
         ccg = Graph()
 
@@ -71,6 +80,11 @@ class cssCode:
 
 
     def check_connectivity_graphs(self) -> Dict[bool,Graph]:
+
+        r"""
+        Produces a dictionary mapping the boolean False (True) to a graph describing the nontrivial intersections
+        of the X (Z) type stabilizer generators of the code.
+        """
 
         z_ccg = Graph()
         x_ccg = Graph()
