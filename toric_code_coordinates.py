@@ -70,7 +70,8 @@ def toric_stabilizer_generators(Lx:int,Ly:int) -> List[List[Set[int]]]:
 
 def potential_nbrhd(Lx:int,Ly:int,r:Tuple[int,int]) -> List[Tuple[int,int]]:
     r"""
-    Function for producing a set of coordinates neighboring the input tuple r
+    Function for producing a set of coordinates neighboring the input tuple r subject to periodic boundary
+    conditions with periodicity 2*Lx and 2*Ly in the respective directions
 
     """
 
