@@ -2,12 +2,9 @@
 ## The code itself is specified by subsets of the set of qubits subject to certain consistency constraints
 ## We will initialize based on parity check matrices
 
-import math
-import numpy as np
-
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from code_tools import commutation_test, order_set_list, generate_check_dict, generate_qubit_nbrs_dict
+from code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict
 
 class cssCode:
 
@@ -106,5 +103,23 @@ class cssCode:
                     z_ccg.add_edge((True,ii),(True,jj))
 
         return {False:x_ccg,True:z_ccg}
+    
+    def boundary_qubits(self) -> Dict[bool,Set[int]]:
+        r"""
+        Function returning a dictionary mapping the boolean False (True) to a set of qubit labels for which is supported on only one
+        stabilizer generator of X (Z) type. 
+        """
+
+        bdries = dict()
+        for sector in [False,True]:
+            sector_bdry = set()
+            for q in self.qubits:
+                if len(self.qubit_dict[sector][q])==1:
+                    sector_bdry.add(q)
+            bdries[sector] = sector_bdry
+        
+        return bdries
+
+
 
 
