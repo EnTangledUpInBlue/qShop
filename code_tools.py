@@ -62,7 +62,11 @@ def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
 
 def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
-    A function to generate the a list containing the check operator labelst acting on the given qubit.
+    A function to generate a dictionary that maps qubit labels to a labeling of the sets containing them.
+    The labeling is assigned by the generate_check_dict function.
+
+    INPUT: List of sets of qubit labels
+    OUTPUT: Dictionary mapping qubit labels to a set of the integer labels for the input sets
     """
 
     qubits = set.union(*set_list)
@@ -73,7 +77,6 @@ def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     c2i = {tuple(sorted(list(v))):k for k,v in i2c.items()}
 
     for q in list(qubits):
-
         for chk in set_list:
             if q in chk:
                 qubit_dict[q].add(c2i[tuple(sorted(list(chk)))])

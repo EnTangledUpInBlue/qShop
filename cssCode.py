@@ -13,7 +13,17 @@ class cssCode:
 
     def __init__(self,Sx:List[Set[int]],Sz:List[Set[int]]) -> None:
         r"""
-        Initialize a CSS code instance
+        Initialize a CSS code instance from a presentation of the X and Z stabilizer generators.
+
+        Properties of a cssCode object:
+
+        :property code: A dictionary mapping the boolean False (True) to the list of X (Z) stabilizer generators.
+
+        :property qubits: The set of all qubit labels from the input generators.
+
+        :property check_dict: A dictionary mapping the boolean False (True) to a dictionary assigning integer labels to the input X (Z) stabilizer generators.
+
+        :property qubit_dict: A dictionary mapping the qubit labels to a dictionary mapping the boolean False (True) to the list of X (Z) stabilizer generators containing that label
         """
 
         assert commutation_test(Sx,Sz)
@@ -21,10 +31,14 @@ class cssCode:
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
         self.check_dict = {False:generate_check_dict(Sx), True:generate_check_dict(Sz)}
-        self.qubit_dict = {q:[generate_qubit_nbrs_dict(Sx)[q],generate_qubit_nbrs_dict(Sz)[q]] for q in list(self.qubits)}
+
+        xdict = generate_qubit_nbrs_dict(Sx)
+        zdict = generate_qubit_nbrs_dict(Sz)
+
+        self.qubit_dict = {q:{False:xdict[q], True:zdict[q]} for q in list(self.qubits)}
         
     ## Include methods for producing check matrices and Tanner graphs
-    ## Can also change the presentation of a given linear code
+    ## Also methods for changing the presentation of a given linear code
 
     def to_check_matrices(self) -> List[List[List[int]]]:
         check_matrices = []

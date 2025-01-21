@@ -72,7 +72,8 @@ def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
 
 def rsurf_q2i(L:int) -> Dict[Tuple[int,int],int]:
     r"""
-    Creates a dictionary mapping qubit coordinates to integer labels
+    Creates a dictionary mapping qubit coordinates to integer labels. Note that this mapping is based on the lowest integer label and 
+    is different than might be expected based on geometry of the lattice.
 
     :param L: The dimensions of the square lattice for the rotated surface code.
     
