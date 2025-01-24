@@ -1,5 +1,21 @@
 from typing import List,Set,Dict,Tuple
 
+def surf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
+
+    if L == 2:
+        return set([(0,0), (1,1), (0,2), (2,0), (2,2)])
+    
+    else:
+        Lset = surf_qubit_coords(L-1)
+        for coord1 in range(2*L-1):
+
+            Lset.add((coord1,2*(L-1)-coord1%2))
+            Lset.add((2*(L-1)-coord1%2,coord1))
+        
+        return Lset
+            
+
+
 def surf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
     r"""
     Coordinates for the check locations in the standard surface code
