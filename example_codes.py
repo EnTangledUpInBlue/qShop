@@ -2,6 +2,14 @@
 from typing import List, Set, Dict
 from rotated_surface_code_coordinates import rsurf_stabilizer_generators
 from toric_code_coordinates import toric_stabilizer_generators
+from standard_surface_code_coordinates import surf_stabilizer_generators
+
+
+def surf_code(L:int) -> List[List[Set[int]]]:
+
+    Sx,Sz = surf_stabilizer_generators(L)
+
+    return Sx,Sz
 
 def toric_code(Lx:int,Ly:int) -> List[List[Set[int]]]:
 

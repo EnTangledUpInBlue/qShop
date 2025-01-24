@@ -27,7 +27,7 @@ def surf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
     if L==2:
         xcheck_coords = {(0,1), (2,1)}
 
-        zcheck_coords = {(1,0),(1,3)}
+        zcheck_coords = {(1,0),(1,2)}
 
         return [xcheck_coords,zcheck_coords]
     
