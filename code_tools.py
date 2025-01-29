@@ -83,6 +83,19 @@ def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
 
     return qubit_dict
 
+def pcm_to_sets(H:List[List[int]]) -> List[Set[int]]:
+
+    gens = []
+
+    for row in range(len(H)):
+        row_set = set()
+        for col in range(len(H[0])):
+            if H[row][col]:
+                row_set.add(col)
+        gens.append(row_set)
+
+    return gens
+
 def max_elem(S:List[Set[int]]) -> int:
     r"""
     Takes in a list of sets of non-negative integers and outputs the maximum element over all sets
