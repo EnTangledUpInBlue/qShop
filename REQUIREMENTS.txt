@@ -1,0 +1,6 @@
+numpy
+stim
+networkx
+scipy
+pymatching
+jupyter
