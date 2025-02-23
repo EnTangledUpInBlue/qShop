@@ -24,10 +24,6 @@ def Amatrix(m:int,el:int,ax:int,ay1:int,ay2:int):
     A2 = matrix_power(Y,ay1)
     A3 = matrix_power(Y,ay2)
 
-    # A1 = X**ax
-    # A2 = Y**ay1
-    # A3 = Y**ay2
-
     return array((A1+A2+A3),dtype = int)
 
 def Bmatrix(m:int,el:int,by:int,bx1:int,bx2:int):
@@ -39,13 +35,9 @@ def Bmatrix(m:int,el:int,by:int,bx1:int,bx2:int):
     B2 = matrix_power(X,bx1)
     B3 = matrix_power(X,bx2)
 
-    # B1 = Y**by
-    # B2 = X**bx1
-    # B3 = X**bx2
-
     return array((B1+B2+B3),dtype=int)
 
-def pcm(m:int,el:int,aexp = List[int],bexp = List[int]):
+def pcm(el:int,m:int,aexp = List[int],bexp = List[int]):
 
     ax,ay1,ay2 = aexp
     by,bx1,bx2 = bexp

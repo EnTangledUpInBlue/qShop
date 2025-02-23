@@ -1,12 +1,9 @@
-## parity check matrices for the repetition code
+## parity check matrices for a growing set of CSS codes
 from typing import List, Set, Dict
-from rotated_surface_code_coordinates import rsurf_stabilizer_generators
-from toric_code_coordinates import toric_stabilizer_generators
-from standard_surface_code_coordinates import surf_stabilizer_generators
-from bivariate_bicycle_checks import pcm
-
-
-
+from codes.rotated_surface_code_coordinates import rsurf_stabilizer_generators
+from codes.toric_code_coordinates import toric_stabilizer_generators
+from codes.standard_surface_code_coordinates import surf_stabilizer_generators
+from codes.bivariate_bicycle_checks import pcm
 
 def surf_code(L:int) -> List[List[Set[int]]]:
 

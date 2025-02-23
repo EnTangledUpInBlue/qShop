@@ -4,7 +4,9 @@
 
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict
+from codes.code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict
+
+# __all__ = ["cssCode"]
 
 class cssCode:
 
@@ -85,19 +87,15 @@ class cssCode:
 
         ccg = {False:Graph(),True:Graph()}
 
-        z_ccg = Graph()
-        x_ccg = Graph()
-
         for sector in [False,True]:
             for ii in range(len(self.check_dict[sector])):
                 check1 = self.check_dict[sector][ii]
                 for jj in range(ii+1,len(self.check_dict[sector])):
+
                     check2 = self.check_dict[sector][jj]
                     
                     if not check1.isdisjoint(check2):
                         ccg[sector].add_edge(ii,jj)
-
-                        # ccg[sector].add_edge((sector,ii),(sector,jj))
 
         return ccg
     
@@ -107,15 +105,12 @@ class cssCode:
         stabilizer generator of X (Z) type. 
         """
 
-        # bdries = dict()
         bdries = {False:set(),True:set()}
 
         for sector in [False,True]:
-            # sector_bdry = set()
             for q in self.qubits:
                 if len(self.qubit_dict[q][sector])==1:
                     bdries[sector].add(q)
-            # bdries[sector] = sector_bdry
         
         return bdries
 
