@@ -1,4 +1,4 @@
-## parity check matrices for the repetition code
+## parity check matrices for a growing set of CSS codes
 from typing import List, Set, Dict
 from codes.rotated_surface_code_coordinates import rsurf_stabilizer_generators
 from codes.toric_code_coordinates import toric_stabilizer_generators
