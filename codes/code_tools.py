@@ -9,6 +9,54 @@ def commutation_test(Sx:List[Set[int]],Sz:List[Set[int]]) -> bool:
 
     return all([(not len(sx&sz)%2) for sx in Sx for sz in Sz])
 
+def remove_empties(set_list:List[Set[int]]) -> List[Set[int]]:
+    r"""
+    Function that removes empty sets from the input list of sets and returns the modified list
+    """
+    
+    while set() in set_list:
+        set_list.remove(set())
+    return set_list
+
+def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[int]]:
+    r"""
+    Function that takes as input a list of sets and returns an equivalent list of generators that have
+    unique minimum elements.
+    """
+    
+    set_list = remove_empties(set_list)
+
+    # print(set_list)
+    # print(piv_list)
+    # print()
+
+    if not len(set_list):
+        return piv_list
+    
+    else:
+        ord_list = order_set_list(set_list)
+
+        print(len(set_list))
+        print(len(piv_list))
+        
+        if len(ord_list)==1:
+            piv_list.append(ord_list[0])
+            return piv_list
+        
+        else:
+
+            new_pivot = ord_list.pop(0)
+
+            q = min(new_pivot)
+
+            print('q = ' + str(q) + '\n')
+
+            for chk in ord_list:
+                if q in chk:
+                    chk ^= new_pivot
+            piv_list.append(new_pivot)
+
+            return pivot_finder(ord_list,piv_list)
 
 def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
     r"""
@@ -18,8 +66,11 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
 
     if len(set_list) < 2:
         return set_list
+    
     elif len(set_list) ==2:
-        if min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
+        if set_list[0] == set_list[1]:
+            return set_list
+        elif min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
             return set_list
         else:
             return [set_list[1],set_list[0]]
@@ -84,6 +135,9 @@ def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     return qubit_dict
 
 def pcm_to_sets(H:List[List[int]]) -> List[Set[int]]:
+    r"""
+    Takes in a parity check matrix and returns the supports as sets of qubit labels for each row, i.e., check operator
+    """
 
     gens = []
 
@@ -113,3 +167,35 @@ def min_elem(S:List[Set[int]]) -> int:
     full_set = set.union(*S)
     
     return min(full_set)
+
+def stabilizer_pivots(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+
+    pivot_sets = dict()
+
+    qubit_dict = generate_qubit_nbrs_dict(set_list)
+
+    check_dict = generate_check_dict(set_list)
+
+    chosen_ones = set()
+
+    qubits = sorted(list(set.union(*set_list)))
+
+    ## go through qubits and pick a pivot check if there are any remaining
+
+    for q in qubits:
+        qchecks = qubit_dict[q] ## identify the set of check labels supported in q
+        if len(qchecks)>0:
+            Cq = qchecks.pop()
+            chosen_ones.add(Cq)
+            pivot_sets[q] = check_dict[Cq]
+
+            for qp in qubits:
+                qubit_dict[qp] -= set([Cq])
+
+            for chk in set(check_dict.keys())-chosen_ones:
+                check_dict[chk] ^= check_dict[Cq]
+    
+    return pivot_sets
+
+
+    
