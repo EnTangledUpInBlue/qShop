@@ -18,6 +18,15 @@ def remove_empties(set_list:List[Set[int]]) -> List[Set[int]]:
         set_list.remove(set())
     return set_list
 
+def remove_duplicates(set_list:List[Set[int]]) -> List[Set[int]]:
+
+    new_list = []
+    for x in set_list:
+        if x not in new_list:
+            new_list.append(x)
+    
+    return new_list
+
 def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[int]]:
     r"""
     Function that takes as input a list of sets and returns an equivalent list of generators that have
@@ -25,6 +34,7 @@ def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[in
     """
     
     set_list = remove_empties(set_list)
+    set_list = remove_duplicates(set_list)
 
     # print(set_list)
     # print(piv_list)
@@ -68,9 +78,7 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         return set_list
     
     elif len(set_list) ==2:
-        if set_list[0] == set_list[1]:
-            return set_list
-        elif min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
+        if min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
             return set_list
         else:
             return [set_list[1],set_list[0]]
@@ -167,35 +175,3 @@ def min_elem(S:List[Set[int]]) -> int:
     full_set = set.union(*S)
     
     return min(full_set)
-
-def stabilizer_pivots(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
-
-    pivot_sets = dict()
-
-    qubit_dict = generate_qubit_nbrs_dict(set_list)
-
-    check_dict = generate_check_dict(set_list)
-
-    chosen_ones = set()
-
-    qubits = sorted(list(set.union(*set_list)))
-
-    ## go through qubits and pick a pivot check if there are any remaining
-
-    for q in qubits:
-        qchecks = qubit_dict[q] ## identify the set of check labels supported in q
-        if len(qchecks)>0:
-            Cq = qchecks.pop()
-            chosen_ones.add(Cq)
-            pivot_sets[q] = check_dict[Cq]
-
-            for qp in qubits:
-                qubit_dict[qp] -= set([Cq])
-
-            for chk in set(check_dict.keys())-chosen_ones:
-                check_dict[chk] ^= check_dict[Cq]
-    
-    return pivot_sets
-
-
-    
