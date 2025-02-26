@@ -46,8 +46,8 @@ def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[in
     else:
         ord_list = order_set_list(set_list)
 
-        print(len(set_list))
-        print(len(piv_list))
+        # print(len(set_list))
+        # print(len(piv_list))
         
         if len(ord_list)==1:
             piv_list.append(ord_list[0])
@@ -59,7 +59,7 @@ def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[in
 
             q = min(new_pivot)
 
-            print('q = ' + str(q) + '\n')
+            # print('q = ' + str(q) + '\n')
 
             for chk in ord_list:
                 if q in chk:
