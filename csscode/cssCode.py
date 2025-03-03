@@ -4,7 +4,7 @@
 
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from codes.code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict
+from codes.code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict, pivot_finder
 
 # __all__ = ["cssCode"]
 
@@ -36,7 +36,7 @@ class cssCode:
 
         self.qubit_dict = {q:{False:xdict[q], True:zdict[q]} for q in list(self.qubits)}
         
-    ## Include methods for producing check matrices and Tanner graphs
+    ## Include methods for producing Tanner graphs
     ## Also methods for changing the presentation of a given linear code, i.e., updating the code properties
 
     def to_check_matrices(self) -> Dict[bool,List[Tuple[int]]]:
@@ -116,9 +116,9 @@ class cssCode:
 
     def classical_bits(self) -> Dict[bool,Set[int]]:
         r"""
-        A function that identifies any classical bits which are any qubits that are supported only on a single type of stabilizer.
-        These are returned in a dictionary that maps the boolean False (True) to the set of qubits that are solely supported on 
-        X (Z) type stabilizers.
+        A function that identifies any classical bits which are defined to be any qubits that are supported only on a single 
+        type of stabilizer. These are returned in a dictionary that maps the boolean False (True) to the set of qubits that
+        are solely supported on X (Z) type stabilizers.
         """
 
         class_bits = dict()

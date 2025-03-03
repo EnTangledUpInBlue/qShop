@@ -74,10 +74,15 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
     the minimum unique element for two sets.
     """
 
+    set_list = remove_empties(set_list)
+    set_list = remove_duplicates(set_list)
+
     if len(set_list) < 2:
         return set_list
     
-    elif len(set_list) ==2:
+    elif len(set_list) == 2:
+        ## There is an issue is one set is a subset of the other
+        # print(set_list)
         if min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
             return set_list
         else:

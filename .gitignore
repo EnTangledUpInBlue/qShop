@@ -1,9 +1,8 @@
 # Untracked files:
-qWorkbench.ipynb
 *.pyc
 __pycache__/code_tools.cpython-312.pyc
 __pycache__/example_codes.cpython-312.pyc
 
 # Untracked folders:
 __pycache__/
-qWorkshop/
+# qWorkshop/
