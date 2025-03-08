@@ -4,7 +4,7 @@
 
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from codes.code_tools import commutation_test, generate_check_dict, generate_qubit_nbrs_dict, pivot_finder
+from codes.code_tools import commutation_test, generate_check_dict, generate_syndrome_dict, pivot_finder
 
 # __all__ = ["cssCode"]
 
@@ -31,8 +31,8 @@ class cssCode:
         self.qubits = set.union(*(Sx+Sz))
         self.check_dict = {False:generate_check_dict(Sx), True:generate_check_dict(Sz)}
 
-        xdict = generate_qubit_nbrs_dict(Sx)
-        zdict = generate_qubit_nbrs_dict(Sz)
+        xdict = generate_syndrome_dict(Sx)
+        zdict = generate_syndrome_dict(Sz)
 
         self.qubit_dict = {q:{False:xdict[q], True:zdict[q]} for q in list(self.qubits)}
         

@@ -2,6 +2,33 @@
 
 from typing import List,Set,Dict
 
+def column_echelon_form(set_list:List[Set[int]])->List[Set[int]]:
+    r"""
+    function for generating the column sets corresponding to bringing the setlist into column echelon form
+    which span the kernel of the setlist
+    """
+
+    min_set = pivot_finder(set_list,[])
+    pivots = [min(pivset) for pivset in min_set]
+    qubits = set.union(*set_list)
+
+    syndromes = generate_syndrome_dict(min_set)
+
+    col_sets = {q:set() for q in qubits}
+
+    qlist = sorted(list(qubits))
+
+    for q in qlist:
+        col = {q}
+
+        for chk in syndromes[q]:
+            if min(min_set[chk]) != q:
+                col^=col_sets[min(min_set[chk])]
+        
+        col_sets[q] = col
+
+    return col_sets
+
 def commutation_test(Sx:List[Set[int]],Sz:List[Set[int]]) -> bool:
     r"""
     function for taking two lists of sets and determining if they satisfy the necessary constraint
@@ -19,13 +46,26 @@ def remove_empties(set_list:List[Set[int]]) -> List[Set[int]]:
     return set_list
 
 def remove_duplicates(set_list:List[Set[int]]) -> List[Set[int]]:
-
+    r"""
+    Function that removes duplicate sets from the input list of sets and returns the modified list
+    """
+    
     new_list = []
     for x in set_list:
         if x not in new_list:
             new_list.append(x)
     
     return new_list
+
+def pivots(set_list:List[Set[int]]) -> List[int]:
+    r"""
+    Function that returns the pivot elements of the input list
+    """
+
+    piv_list = pivot_finder(set_list,[])
+    
+    return [min(pivset) for pivset in piv_list]
+
 
 def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[int]]:
     r"""
@@ -36,19 +76,12 @@ def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[in
     set_list = remove_empties(set_list)
     set_list = remove_duplicates(set_list)
 
-    # print(set_list)
-    # print(piv_list)
-    # print()
-
     if not len(set_list):
         return piv_list
     
     else:
         ord_list = order_set_list(set_list)
 
-        # print(len(set_list))
-        # print(len(piv_list))
-        
         if len(ord_list)==1:
             piv_list.append(ord_list[0])
             return piv_list
@@ -58,8 +91,6 @@ def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[in
             new_pivot = ord_list.pop(0)
 
             q = min(new_pivot)
-
-            # print('q = ' + str(q) + '\n')
 
             for chk in ord_list:
                 if q in chk:
@@ -81,9 +112,11 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         return set_list
     
     elif len(set_list) == 2:
-        ## There is an issue is one set is a subset of the other
-        # print(set_list)
-        if min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
+        ## There is an issue if one set is a subset of the other
+
+        if set_list[0] < set_list[1] or set_list[1]<set_list[0]:
+            return order_set_list([set_list[0]^set_list[1],set_list[0]&set_list[1]])
+        elif min(set_list[0]-set_list[1])<min(set_list[1]-set_list[0]):
             return set_list
         else:
             return [set_list[1],set_list[0]]
@@ -96,8 +129,9 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         full_set_list = []
 
         while(len(opening_set)>0 and len(closing_set) > 0):
-
-            if min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
+            if opening_set[0] < closing_set[0] or closing_set[0]<opening_set[0]:
+                full_set_list.append(opening_set.pop(0)&closing_set.pop(0))
+            elif min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
                 full_set_list.append(opening_set.pop(0))            
             else:
                 full_set_list.append(closing_set.pop(0))
@@ -124,9 +158,10 @@ def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
 
     return check_dict
 
-def generate_qubit_nbrs_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
+def generate_syndrome_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
-    A function to generate a dictionary that maps qubit labels to a labeling of the sets containing them.
+    A function to generate a dictionary that maps qubit labels to a set of the labels of sets containing them.
+    This is equivalent to the syndrome of a single qubit error acting on that qubit
     The labeling is assigned by the generate_check_dict function.
 
     INPUT: List of sets of qubit labels
