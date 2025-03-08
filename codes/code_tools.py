@@ -49,7 +49,7 @@ def remove_duplicates(set_list:List[Set[int]]) -> List[Set[int]]:
     r"""
     Function that removes duplicate sets from the input list of sets and returns the modified list
     """
-    
+
     new_list = []
     for x in set_list:
         if x not in new_list:
@@ -112,7 +112,7 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         return set_list
     
     elif len(set_list) == 2:
-        ## There is an issue if one set is a subset of the other
+        ## There is (maybe now was) an issue if one set is a subset of the other
 
         if set_list[0] < set_list[1] or set_list[1]<set_list[0]:
             return order_set_list([set_list[0]^set_list[1],set_list[0]&set_list[1]])
@@ -128,9 +128,21 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
 
         full_set_list = []
 
+        ## Also need to address the subset edge case here
+        
         while(len(opening_set)>0 and len(closing_set) > 0):
             if opening_set[0] < closing_set[0] or closing_set[0]<opening_set[0]:
-                full_set_list.append(opening_set.pop(0)&closing_set.pop(0))
+                opo = opening_set.pop(0)
+                cpo = closing_set.pop(0)
+                s1 = opo^cpo
+                s2 = opo&cpo
+                if min(s1-s2) < min(s2-s1):
+                    full_set_list.append(s1)
+                    full_set_list.append(s2)
+                else:
+                    full_set_list.append(s2)
+                    full_set_list.append(s1)
+                # full_set_list.append(opening_set.pop(0)&closing_set.pop(0))
             elif min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
                 full_set_list.append(opening_set.pop(0))            
             else:
