@@ -29,6 +29,7 @@ class cssCode:
 
         self.code = {False:Sx,True:Sz}
         self.qubits = set.union(*(Sx+Sz))
+        self.Nqubits = len(self.qubits)
         self.check_dict = {False:generate_check_dict(Sx), True:generate_check_dict(Sz)}
 
         xdict = generate_syndrome_dict(Sx)
