@@ -4,7 +4,7 @@
 
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from codes.code_tools import commutation_test, generate_check_dict, generate_syndrome_dict, pivot_finder
+from codes.code_tools import commutation_test, generate_check_dict, generate_syndrome_dict
 
 # __all__ = ["cssCode"]
 
@@ -110,7 +110,6 @@ class cssCode:
                     ccg.add_edge((False,xlabel),(True,zlabel))
 
         return ccg
-
 
     def check_connectivity_graphs(self) -> Dict[bool,Graph]:
 
