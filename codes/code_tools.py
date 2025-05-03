@@ -49,14 +49,14 @@ def remove_duplicates_empties(set_list:List[Set[int]]) -> List[Set[int]]:
     
     return new_list
 
-def pivots(set_list:List[Set[int]]) -> List[int]:
+def pivots(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
     Function that returns the pivot elements of the input list
     """
 
     piv_list = pivot_finder(set_list,[])
     
-    return [min(pivset) for pivset in piv_list]
+    return {min(pivset): pivset for pivset in piv_list}
 
 
 def pivot_finder(set_list:List[Set[int]],piv_list:List[Set[int]]) -> List[Set[int]]:
@@ -125,8 +125,6 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
     the minimum unique element for two sets.
     """
 
-    # set_list = remove_empties(set_list)
-    # set_list = remove_duplicates(set_list)
     set_list_update = remove_duplicates_empties(set_list)
 
     if len(set_list_update) < 2:
@@ -163,7 +161,7 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
                 else:
                     full_set_list.append(s2)
                     full_set_list.append(s1)
-                # full_set_list.append(opening_set.pop(0)&closing_set.pop(0))
+
             elif min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
                 full_set_list.append(opening_set.pop(0))            
             else:

@@ -12,7 +12,7 @@ class cssCode:
 
     def __init__(self,Sx:List[Set[int]],Sz:List[Set[int]]) -> None:
         r"""
-        Initialize a CSS code instance from a presentation of the X and Z stabilizer generators.
+        Initialize a CSS code instance from a presentation of the X and Z stabilizer generators specified by their support.
 
         Properties of a cssCode object:
 
@@ -56,6 +56,39 @@ class cssCode:
             check_matrices[sector] = entries
 
         return check_matrices
+    
+    def to_tanner_graph(self) -> Graph:
+
+        r"""
+        Produces the "quantum" Tanner graph (one layer of bit nodes, two layers of check nodes)
+        """
+
+        qtg = Graph()
+
+        # Add nodes first
+        # node attributes to be bit ('B') xcheck ('X') and zchecks ('Z')
+        # first assign qubits, then xchecks, then zchecks
+
+        for qub in self.qubits:
+            qtg.add_node(qub,qubit_type ='B')
+
+        for xcheck in self.check_dict[False].keys():
+            qtg.add_node(xcheck+len(self.qubits),qubit_type = 'X')
+
+        for zcheck in self.check_dict[True].keys():
+            qtg.add_node(zcheck+len(self.qubits)+len(self.check_dict[False]),qubit_type = 'Z')
+
+        # Next add edges
+        # First edges between bit nodes and xcheck nodes
+
+        for qub in self.qubits:
+            for xcheck in self.qubit_dict[qub][False]:
+                qtg.add_edge(qub,xcheck+len(self.qubits))
+            for zcheck in self.qubit_dict[qub][True]:
+                qtg.add_edge(qub,zcheck+len(self.qubits)+len(self.check_dict[False]))
+
+        return qtg
+
     
     def check_chain_graph(self) -> Graph:
 
