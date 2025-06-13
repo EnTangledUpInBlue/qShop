@@ -31,14 +31,15 @@ def column_echelon_form(set_list:List[Set[int]])->List[Set[int]]:
 
 def commutation_test(Sx:List[Set[int]],Sz:List[Set[int]]) -> bool:
     r"""
-    function for taking two lists of sets and determining if they satisfy the necessary constraint
+    Function for taking two lists of sets and determining if they satisfy the necessary constraint that every set from Sx has an even-cardinality intersection with every set from Sz.
+    This is equivalent to the commutation constraint for the two classical codes comprising a CSS code.
     """
 
     return all([(not len(sx&sz)%2) for sx in Sx for sz in Sz])
 
 def remove_duplicates_empties(set_list:List[Set[int]]) -> List[Set[int]]:
     r"""
-    Function that removes duplicate sets from the input list of sets and returns the modified list
+    Function that removes duplicate sets and empty sets from the input list of sets and returns the modified list.
     """
 
     new_list = []
@@ -51,7 +52,7 @@ def remove_duplicates_empties(set_list:List[Set[int]]) -> List[Set[int]]:
 
 def pivots(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
-    Function that returns the pivot elements of the input list
+    Function that returns a set of pivot elements of the input list
     """
 
     piv_list = pivot_finder(set_list,[])
@@ -176,8 +177,7 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
     
 def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
-    Takes a list of sets and labels them according to the ordering in order_set_list
-
+    Takes a list of sets and labels them according to the ordering defined in order_set_list.
     """
 
     check_dict = dict()
