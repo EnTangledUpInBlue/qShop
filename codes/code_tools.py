@@ -38,6 +38,24 @@ def compute_kernel(set_list:List[Set[int]]) -> List[Set[int]]:
 
     return kern
 
+def compute_logicals(set_list1:List[Set[int]],set_list2:List[Set[int]]):
+    r"""
+    Function for computing elements in the kernel of set_list1 that are
+    not in the image of set_list2.
+
+    :param set_list1:
+    :param set_list2:
+    :return: objects in the kernel of set_list1 that are not in the image of 
+            set_list2
+    """
+
+    kern1 = compute_kernel(set_list1)
+    logicals = []
+    for op1 in kern1:
+        if not image_checker(set_list2+logicals,op1):
+            logicals.append(op1)
+    return logicals
+
 def compute_pivots(set_list:List[Set[int]]) -> List[int]:
     r"""
     Function for computing the pivot elements of a check matrix represented by a list of sets.

@@ -4,7 +4,7 @@
 
 from networkx import Graph
 from typing import Dict, Set, List, Tuple
-from codes.code_tools import commutation_test, generate_check_dict, generate_syndrome_dict
+from codes.code_tools import commutation_test, generate_check_dict, generate_syndrome_dict,compute_logicals
 
 # __all__ = ["cssCode"]
 
@@ -36,6 +36,9 @@ class cssCode:
         zdict = generate_syndrome_dict(Sz)
 
         self.qubit_dict = {q:{False:xdict[q], True:zdict[q]} for q in list(self.qubits)}
+
+        self.xlogicals = compute_logicals(Sz,Sx)
+        self.zlogicals = compute_logicals(Sx,Sz)
         
     ## Include methods for producing Tanner graphs
     ## Also methods for changing the presentation of a given linear code, i.e., updating the code properties
