@@ -1,6 +1,6 @@
 from typing import List,Set,Dict,Tuple
 
-def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
+def rsurf_qubit_coords(L1:int,L2:int) -> Set[Tuple[int,int]]:
     r"""
     Coordinates for the qubit locations in the rotated surface code. A factor of 2 is included to allow for 
     checks to be located at integer coordinates.
@@ -9,21 +9,17 @@ def rsurf_qubit_coords(L:int) -> Set[Tuple[int,int]]:
 
     """
 
-    if L==1:
-        return set([(0,0)])
+    if L1==1:
+        Lset = set([(0,2*coord2) for coord2 in range(L2)])
     
     else:
-        Lset = rsurf_qubit_coords(L-1)
-        for coord1 in range(L-2,L):
-            Lset.add((2*coord1,2*coord1))
-
-            for coord2 in range(coord1):
-                Lset.add((2*coord1,2*coord2))
-                Lset.add((2*coord2,2*coord1))
+        Lset = rsurf_qubit_coords(L1-1,L2)
+        for coord1 in range(L2):
+            Lset.add(((2*(L1-1)),2*coord1))
         
-        return Lset
+    return Lset
 
-def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
+def rsurf_check_coords(L1:int,L2:int) -> List[Set[Tuple[int,int]]]:
     r"""
     Coordinates for the check locations in the rotated surface code
 
@@ -31,7 +27,7 @@ def rsurf_check_coords(L:int) -> List[Set[Tuple[int,int]]]:
     
     """
 
-    if L==3:
+    if L1==3:
         xcheck_coords = {(-1,1), (1,3), (3,1), (5,3)}
 
         zcheck_coords = {(1,1),(1,5),(3,-1), (3,3)}

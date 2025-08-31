@@ -48,20 +48,39 @@ def compute_logicals(set_list1:List[Set[int]],set_list2:List[Set[int]]):
     :return: objects in the kernel of set_list1 that are not in the image of 
             set_list2
     """
-
+    ordered_list2 = order_set_list(set_list2)
+    
     kern1 = compute_kernel(set_list1)
-    logicals = []
-    for op1 in kern1:
-        if not image_checker(set_list2+logicals,op1):
-            logicals.append(op1)
-    return logicals
+
+    pivots = compute_pivots(ordered_list2+kern1)
+
+    logs = []
+
+    for row in sorted(pivots):
+        if row>len(set_list2)-1:
+            kern_index = row - len(set_list2)
+            if kern_index >=0 and kern_index<len(kern1):
+                logs.append(kern1[kern_index])
+            else:
+                print("lost row: " + str(row))
+    print()
+
+    return logs
+
+    # return [kern1[row-len(set_list2)] for row in pivots if row>=len(set_list2)]
+
+    # kern1 = compute_kernel(set_list1)
+    # logicals = []
+    # for op1 in kern1:
+    #     if not image_checker(set_list2+logicals,op1):
+    #         logicals.append(op1)
+    # return logicals
 
 def compute_pivots(set_list:List[Set[int]]) -> List[int]:
     r"""
     Function for computing the pivot elements of a check matrix represented by a list of sets.
-
-
     """
+
     qlist= sorted(list(set.union(*set_list)))
     col_dict = {q:{q} for q in qlist}
     syndromes = generate_syndrome_dict(set_list)
@@ -103,6 +122,12 @@ def image_checker(set_list:List[Set[int]],elem_set:Set[int]) -> bool:
         return not len(compute_pivots(set_list+[elem_set])) > len(compute_pivots(set_list))
 
 
+def set_order(set1:Set[int],set2:Set[int]) -> int:
+
+    if not len(set1-set2):
+        return 0
+    else:
+        return int(min(set2-set1)>min(set1-set2))
 
 def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
     r"""
@@ -114,54 +139,80 @@ def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
         duplicate sets or empty sets.
     """
 
-    set_list_update = remove_duplicates_empties(set_list)
-
-    if len(set_list_update) < 2:
-        return set_list_update
-    
-    elif len(set_list_update) == 2:
-        ## There is (maybe now was) an issue if one set is a subset of the other
-
-        if set_list_update[0] < set_list_update[1] or set_list_update[1]<set_list_update[0]:
-            return order_set_list([set_list_update[0]^set_list_update[1],set_list_update[0]&set_list_update[1]])
-        elif min(set_list_update[0]-set_list_update[1])<min(set_list_update[1]-set_list_update[0]):
-            return set_list_update
-        else:
-            return [set_list_update[1],set_list_update[0]]
-        
+    if len(set_list)<2:
+        return set_list
     else:
-        num_sets = len(set_list_update)
-        opening_set = order_set_list(set_list_update[:int(num_sets/2)])
-        closing_set = order_set_list(set_list_update[int(num_sets/2):])
+        first_half = order_set_list(set_list[:int(len(set_list)/2)])
+        second_half = order_set_list(set_list[int(len(set_list)/2):])
+        both_halfs = [first_half,second_half]
 
-        full_set_list = []
+        ordered_list = []
 
-        ## Also need to address the subset edge case here
+        while(len(first_half)>0 and len(second_half)>0):
+            ordered_list.append(both_halfs[set_order(first_half[0],second_half[0])].pop(0))
+
+        return set_list+first_half+second_half
+
+
+
+# def order_set_list(set_list:List[Set[int]]) -> List[Set[int]]:
+#     r"""
+#     Order a list of sets using a merge-sort algorithm with the set ordering determined by comparing 
+#     the minimum unique element for two sets.
+
+#     :param set_list: A list of sets of integers.
+#     :output: A list of sets of integers ordered according to minimal unique element, without any
+#         duplicate sets or empty sets.
+#     """
+
+#     set_list_update = remove_duplicates_empties(set_list)
+
+#     if len(set_list_update) < 2:
+#         return set_list_update
+    
+#     elif len(set_list_update) == 2:
+#         ## There is (maybe now was) an issue if one set is a subset of the other
+
+#         if set_list_update[0] < set_list_update[1] or set_list_update[1]<set_list_update[0]:
+#             return order_set_list([set_list_update[0]^set_list_update[1],set_list_update[0]&set_list_update[1]])
+#         elif min(set_list_update[0]-set_list_update[1])<min(set_list_update[1]-set_list_update[0]):
+#             return set_list_update
+#         else:
+#             return [set_list_update[1],set_list_update[0]]
         
-        while(len(opening_set)>0 and len(closing_set) > 0):
-            if opening_set[0] < closing_set[0] or closing_set[0]<opening_set[0]:
-                opo = opening_set.pop(0)
-                cpo = closing_set.pop(0)
-                s1 = opo^cpo
-                s2 = opo&cpo
-                if min(s1-s2) < min(s2-s1):
-                    full_set_list.append(s1)
-                    full_set_list.append(s2)
-                else:
-                    full_set_list.append(s2)
-                    full_set_list.append(s1)
+#     else:
+#         num_sets = len(set_list_update)
+#         opening_set = order_set_list(set_list_update[:int(num_sets/2)])
+#         closing_set = order_set_list(set_list_update[int(num_sets/2):])
 
-            elif min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
-                full_set_list.append(opening_set.pop(0))            
-            else:
-                full_set_list.append(closing_set.pop(0))
+#         full_set_list = []
 
-        if len(opening_set)>0:
-            full_set_list.extend(opening_set)
-        else:
-            full_set_list.extend(closing_set)
+#         ## Also need to address the subset edge case here
         
-        return full_set_list
+#         while(len(opening_set)>0 and len(closing_set) > 0):
+#             if opening_set[0] < closing_set[0] or closing_set[0]<opening_set[0]:
+#                 opo = opening_set.pop(0)
+#                 cpo = closing_set.pop(0)
+#                 s1 = opo^cpo
+#                 s2 = opo&cpo
+#                 if min(s1-s2) < min(s2-s1):
+#                     full_set_list.append(s1)
+#                     full_set_list.append(s2)
+#                 else:
+#                     full_set_list.append(s2)
+#                     full_set_list.append(s1)
+
+#             elif min(opening_set[0]-closing_set[0]) < min(closing_set[0] - opening_set[0]):
+#                 full_set_list.append(opening_set.pop(0))            
+#             else:
+#                 full_set_list.append(closing_set.pop(0))
+
+#         if len(opening_set)>0:
+#             full_set_list.extend(opening_set)
+#         else:
+#             full_set_list.extend(closing_set)
+        
+#         return full_set_list
     
 def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     r"""
@@ -171,13 +222,8 @@ def generate_check_dict(set_list:List[Set[int]]) -> Dict[int,Set[int]]:
     :return: A dictionary that maps integer labels to the sets of set_list
             corresponding to their place in the order.
     """
-
-    check_dict = dict()
-
-    set_list_ordered = order_set_list(set_list)
-
-    for i in range(len(set_list_ordered)):
-        check_dict[i] = set_list_ordered[i]
+    
+    check_dict: Dict[int,Set[int]] = { ii : set_list[ii] for ii in range(len(set_list))}
 
     return check_dict
 
