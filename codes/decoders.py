@@ -2,6 +2,11 @@
 def bit_strings(n:int) -> list[tuple[int]]:
     r"""
     Function for generating a list of all bit strings of length n
+
+    :param n:
+
+    :return:
+
     """
     if n==0:
         return []
@@ -28,6 +33,10 @@ def steane_transversal_syndrome(rec:list[bool]) -> tuple[bool]:
 
     such that the syndrome is a binary representation of the label of the qubit 
     on which a Z error occurred.
+
+    :param rec:
+
+    :return:
 
     """
 
@@ -68,6 +77,10 @@ def steane_transversal_decoder(rec:list[bool]) -> bool:
     NOTE: Will need to compensate for the logical Pauli-Y operator:
 
     Y_L = - Y 0 Y 1 Y 2 Y 3 Y 4 Y 5 Y 6
+
+    :param rec:
+
+    :return:
 
     """
     
