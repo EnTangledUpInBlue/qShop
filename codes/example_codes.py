@@ -5,9 +5,9 @@ from codes.toric_code_coordinates import toric_stabilizer_generators
 from codes.standard_surface_code_coordinates import surf_stabilizer_generators
 from codes.bivariate_bicycle_checks import pcm
 
-def surf_code(L:int) -> List[List[Set[int]]]:
+def surf_code(L1:int,L2:int) -> List[List[Set[int]]]:
 
-    Sx,Sz = surf_stabilizer_generators(L)
+    Sx,Sz = surf_stabilizer_generators(L1,L2)
 
     return Sx,Sz
 
