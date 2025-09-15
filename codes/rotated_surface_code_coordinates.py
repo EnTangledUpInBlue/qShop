@@ -7,6 +7,8 @@ def rsurf_qubit_coords(L1:int,L2:int) -> Set[Tuple[int,int]]:
 
     :param L: The dimensions of the square lattice for the rotated surface code.
 
+    :return:
+
     """
 
     qubit_coords = set()
@@ -24,7 +26,7 @@ def rsurf_check_coords(L1:int,L2:int) -> Tuple[Set[Tuple[int,int]]]:
     :param L1: The horizontal dimension of the rectangular lattice for the rotated surface code.
     :param L2: The vertical dimension of the rectangular lattice for the rotated surface code.
 
-    :returns: A list with two sets of coordinates. The first element consists of the 
+    :return: A list with two sets of coordinates. The first element consists of the 
     coordinates of the xchecks with the second element consisting of those for the 
     zchecks.
     """
@@ -55,6 +57,7 @@ def rsurf_q2i(L1:int,L2:int) -> Dict[Tuple[int,int],int]:
     :param L1: The dimensions of the square lattice for the rotated surface code.
     :param L2: The dimensions of the square lattice for the rotated surface code.
     
+    :return:
     """
     qcoords = rsurf_qubit_coords(L1,L2)
 
@@ -68,6 +71,7 @@ def rsurf_c2i(L1:int,L2:int) -> Dict[bool,Dict[Tuple[int,int],int]]:
 
     :param L: The dimensions of the square lattice for the rotated surface code.
     
+    :return:
     """
     xcoords,zcoords = rsurf_check_coords(L1,L2)
 
@@ -108,7 +112,7 @@ def potential_nbrhd(r:Tuple[int,int]) -> Set[Tuple[int,int]]:
 
     :param r: Tuple of integers representing the coordinates on a square grid.
 
-    :returns: A list of tuples of integers represeting the neighboring coordinates on the square grid.
+    :return: A list of tuples of integers represeting the neighboring coordinates on the square grid.
 
     """
 
