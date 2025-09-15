@@ -43,6 +43,13 @@ class cssCode:
     ## Include methods for producing Tanner graphs
     ## Also methods for changing the presentation of a given linear code, i.e., updating the code properties
 
+    def code_params(self) -> None:
+        distance_bound = min([len(log) for log in self.xlogicals+self.zlogicals])
+        print("[[" + str(self.Nqubits) + ", " + str(len(self.xlogicals)) + ", " + "<= " + str(distance_bound) + "]]")
+        # print( str(self.Nqubits) + ", " + str(len(self.xlogicals)) + "]]")
+
+        return
+
     def to_check_matrices(self) -> Dict[bool,List[Tuple[int]]]:
         r"""
         Produces a dictionary mapping the boolean False (True) to the Hx (Hz) parity check matrices given in sparse coordinate list format

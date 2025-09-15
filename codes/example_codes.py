@@ -17,9 +17,9 @@ def toric_code(Lx:int,Ly:int) -> List[List[Set[int]]]:
 
     return Sx,Sz
 
-def rsurf_code(L:int) -> List[List[Set[int]]]:
+def rsurf_code(L1:int,L2:int) -> List[List[Set[int]]]:
 
-    Sx,Sz = rsurf_stabilizer_generators(L)
+    Sx,Sz = rsurf_stabilizer_generators(L1,L2)
 
     return Sx,Sz
 
