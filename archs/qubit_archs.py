@@ -8,6 +8,8 @@ def rotated_qubit_architecture(L1:int,L2:int) -> Graph:
 
     :param L1: An integer
     :param L2: An integer
+
+    :return:
     """
 
     qubit_architecture = Graph()
@@ -40,6 +42,8 @@ def planar_qubit_architecture(L1:int,L2:int) -> Graph:
 
     :param L1: An integer
     :param L2: An integer
+
+    :return:
     """
 
     qubit_architecture = Graph()
@@ -68,7 +72,7 @@ def planar_nbhd(xcoord:int,ycoord:int) -> list[tuple[int,int]]:
     :param xcoord:
     :param ycoord:
 
-    :returns: List of tuples representing the coordinates of possible
+    :return: List of tuples representing the coordinates of possible
     neighbors.
     """
 
@@ -88,7 +92,7 @@ def rotated_nbhd(xcoord:int,ycoord:int) -> list[tuple[int,int]]:
     :param xcoord:
     :param ycoord:
 
-    :returns: List of tuples representing the coordinates of possible
+    :return: List of tuples representing the coordinates of possible
     neighbors.
     """
     nbhd = [(xcoord+1,ycoord+1),
