@@ -48,33 +48,13 @@ def compute_logicals(set_list1:List[Set[int]],set_list2:List[Set[int]]):
     :return: objects in the kernel of set_list1 that are not in the image of 
             set_list2
     """
-    ordered_list2 = order_set_list(set_list2)
-    
+
     kern1 = compute_kernel(set_list1)
-
-    pivots = compute_pivots(ordered_list2+kern1)
-
-    logs = []
-
-    for row in sorted(pivots):
-        if row>len(set_list2)-1:
-            kern_index = row - len(set_list2)
-            if kern_index >=0 and kern_index<len(kern1):
-                logs.append(kern1[kern_index])
-            else:
-                print("lost row: " + str(row))
-    print()
-
-    return logs
-
-    # return [kern1[row-len(set_list2)] for row in pivots if row>=len(set_list2)]
-
-    # kern1 = compute_kernel(set_list1)
-    # logicals = []
-    # for op1 in kern1:
-    #     if not image_checker(set_list2+logicals,op1):
-    #         logicals.append(op1)
-    # return logicals
+    logicals = []
+    for op1 in kern1:
+        if not image_checker(set_list2+logicals,op1):
+            logicals.append(op1)
+    return logicals
 
 def compute_pivots(set_list:List[Set[int]]) -> List[int]:
     r"""
