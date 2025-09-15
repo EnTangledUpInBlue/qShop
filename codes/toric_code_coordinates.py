@@ -1,6 +1,17 @@
 from typing import List,Set,Dict,Tuple
 
-def toric_code_coords(Lx:int,Ly:int) -> List[Set[Tuple[int,int]]]:
+def toric_code_coords(Lx:int,Ly:int) -> Tuple[Set[Tuple[int,int]]]:
+    r"""
+    Cycles through all coordinates on the planar grid, assigning
+    each coordinate to either a data qubit, a z-type check qubit
+    or to an x-type check qubit.
+
+    :param Lx:
+    :param Ly:
+
+    :return:
+    
+    """
     
     qubit_coords = set()
     xcheck_coords = set()
@@ -18,7 +29,7 @@ def toric_code_coords(Lx:int,Ly:int) -> List[Set[Tuple[int,int]]]:
                     qubit_coords.add((x,y))
                 else:
                     xcheck_coords.add((x,y))
-    return [qubit_coords,xcheck_coords,zcheck_coords]
+    return (qubit_coords,xcheck_coords,zcheck_coords)
 
 
 def toric_q2i(Lx:int,Ly:int) -> Dict[Tuple[int,int],int]:
