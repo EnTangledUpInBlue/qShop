@@ -1,10 +1,11 @@
 # parity check matrices for a growing set of CSS codes
 
-from typing import List, Set, Dict
+from typing import List, Set
 from codes.rotated_surface_code_coordinates import rsurf_stabilizer_generators
 from codes.toric_code_coordinates import toric_stabilizer_generators
 from codes.standard_surface_code_coordinates import surf_stabilizer_generators
-from codes.bivariate_bicycle_checks import pcm
+
+# from codes.bivariate_bicycle_checks import pcm
 
 
 def surf_code(L1: int, L2: int) -> List[List[Set[int]]]:
@@ -72,9 +73,9 @@ def qpc(m: int, n: int) -> List[List[Set[int]]]:
     Sx = []
     Sz = []
 
-    nqubits = int(n * m)
+    # nqubits = int(n * m)
 
-    ## n blocks, each with m consecutive qubits
+    # n blocks, each with m consecutive qubits
 
     for i in range(n):
         for j in range(m - 1):
