@@ -1,60 +1,66 @@
-## parity check matrices for a growing set of CSS codes
+# parity check matrices for a growing set of CSS codes
+
 from typing import List, Set, Dict
 from codes.rotated_surface_code_coordinates import rsurf_stabilizer_generators
 from codes.toric_code_coordinates import toric_stabilizer_generators
 from codes.standard_surface_code_coordinates import surf_stabilizer_generators
 from codes.bivariate_bicycle_checks import pcm
 
-def surf_code(L1:int,L2:int) -> List[List[Set[int]]]:
 
-    Sx,Sz = surf_stabilizer_generators(L1,L2)
+def surf_code(L1: int, L2: int) -> List[List[Set[int]]]:
 
-    return Sx,Sz
+    Sx, Sz = surf_stabilizer_generators(L1, L2)
 
-def toric_code(Lx:int,Ly:int) -> List[List[Set[int]]]:
+    return Sx, Sz
 
-    Sx,Sz = toric_stabilizer_generators(Lx,Ly)
 
-    return Sx,Sz
+def toric_code(Lx: int, Ly: int) -> List[List[Set[int]]]:
 
-def rsurf_code(L1:int,L2:int) -> List[List[Set[int]]]:
+    Sx, Sz = toric_stabilizer_generators(Lx, Ly)
 
-    Sx,Sz = rsurf_stabilizer_generators(L1,L2)
+    return Sx, Sz
 
-    return Sx,Sz
 
-def bf_rep_code(n:int) -> List[List[Set[int]]]:
+def rsurf_code(L1: int, L2: int) -> List[List[Set[int]]]:
 
-    Sx = []
-    Sz = []
+    Sx, Sz = rsurf_stabilizer_generators(L1, L2)
 
-    for i in range(n):
-        Sz.append(set([i,i+1]))
+    return Sx, Sz
 
-    return Sx,Sz
 
-def pf_rep_code(n:int) -> List[List[Set[int]]]:
+def bf_rep_code(n: int) -> List[List[Set[int]]]:
 
     Sx = []
     Sz = []
 
     for i in range(n):
-        Sx.append(set([i,i+1]))
-    
-    return Sx,Sz
+        Sz.append(set([i, i + 1]))
+
+    return Sx, Sz
+
+
+def pf_rep_code(n: int) -> List[List[Set[int]]]:
+
+    Sx = []
+    Sz = []
+
+    for i in range(n):
+        Sx.append(set([i, i + 1]))
+
+    return Sx, Sz
+
 
 def steane_code() -> List[List[Set[int]]]:
-
     r"""
     Steane code with the high-weight central qubit presentation of the stabilizer generators
     """
 
-    S = [{0,1,2,3},{1,2,4,5},{2,3,5,6}]
+    S = [{0, 1, 2, 3}, {1, 2, 4, 5}, {2, 3, 5, 6}]
 
-    return S,S
+    return S, S
 
-def qpc(m:int,n:int) -> List[List[Set[int]]]:
 
+def qpc(m: int, n: int) -> List[List[Set[int]]]:
     r"""
     Rotated variation of the Shor familty of quantum parity check codes with X (Z) type logical operators
     expressed in terms of single qubit X (Z) operators.
@@ -66,15 +72,14 @@ def qpc(m:int,n:int) -> List[List[Set[int]]]:
     Sx = []
     Sz = []
 
-    nqubits = int(n*m)
+    nqubits = int(n * m)
 
     ## n blocks, each with m consecutive qubits
 
-    for i in range(n):        
-        for j in range(m-1):
-            Sz.append({j+i*m,j+1+i*m})
-        if i != n-1:
-            Sx.append(set([i*m+k for k in range(2*n)]))
+    for i in range(n):
+        for j in range(m - 1):
+            Sz.append({j + i * m, j + 1 + i * m})
+        if i != n - 1:
+            Sx.append(set([i * m + k for k in range(2 * n)]))
 
-    return Sx,Sz
-
+    return Sx, Sz
