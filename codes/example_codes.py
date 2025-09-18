@@ -5,8 +5,6 @@ from codes.rotated_surface_code_coordinates import rsurf_stabilizer_generators
 from codes.toric_code_coordinates import toric_stabilizer_generators
 from codes.standard_surface_code_coordinates import surf_stabilizer_generators
 
-# from codes.bivariate_bicycle_checks import pcm
-
 
 def surf_code(L1: int, L2: int) -> List[List[Set[int]]]:
 
@@ -72,8 +70,6 @@ def qpc(m: int, n: int) -> List[List[Set[int]]]:
 
     Sx = []
     Sz = []
-
-    # nqubits = int(n * m)
 
     # n blocks, each with m consecutive qubits
 

@@ -1,6 +1,52 @@
 from stim import Circuit
 
 
+def noisy_repetition_measurement(
+    circuit: Circuit, block: list[int], perr: float
+) -> Circuit:
+    r"""
+    Method for appending a circuit for a measurement of
+    a repetition-encoded qubit on the set of qubits
+    indicated by block
+
+    :param circuit:
+    :param block:
+    :param perr:
+
+    :return:
+    """
+
+    n = len(block)
+
+    first_half = block[: int(n / 2)]
+    second_half = block[int(n / 2) :]
+
+    for jj in range(int(n / 2) - 1):
+        circuit.append("CNOT", [first_half[jj], first_half[jj + 1]])
+        circuit.append("CNOT", [second_half[jj], second_half[jj + 1]])
+
+        circuit.append("DEPOLARIZE2", [first_half[jj], first_half[jj + 1]], perr)
+        circuit.append("DEPOLARIZE2", [second_half[jj], second_half[jj + 1]], perr)
+
+    if n % 2:
+        circuit.append("CNOT", [second_half[-2], second_half[-1]])
+
+        circuit.append("DEPOLARIZE2", [second_half[-2], second_half[-1]], perr)
+
+    circuit.append("CNOT", [first_half[0], second_half[0]])
+    circuit.append("DEPOLARIZE2", [first_half[0], second_half[0]], perr)
+
+    # Add single-qubit depolarization for noisy single-qubit measurements
+    circuit.append("DEPOLARIZE1", block, perr)
+
+    circuit.append("MX", block[0])
+
+    for qub in block[1:]:
+        circuit.append("MZ", qub)
+
+    return circuit
+
+
 def noisy_repetition_encoder(
     circuit: Circuit, block: list[int], perr: float, flag=False
 ) -> Circuit:
@@ -13,7 +59,7 @@ def noisy_repetition_encoder(
     :param block: list of qubits to encode the state into
     :param flag: A boolean indicating if a flag qubit should be used
 
-    :returns: a stim Circuit
+    :return: a stim Circuit
 
     """
 
@@ -73,7 +119,7 @@ def noisy_steane_encoder(circuit: Circuit, block: list[int], perr: float) -> Cir
     :param block:
     :param perr:
 
-    :returns: A stim circuit with the Steane encoding circuit appended.
+    :return: A stim circuit with the Steane encoding circuit appended.
 
     """
 
@@ -117,6 +163,9 @@ def noisy_encoded_y(
 
     Y = S X S^dag
 
+    :param:
+
+    :return:
     """
     assert len(target_block) == len(control_block)
 
@@ -144,6 +193,11 @@ def construct_steane_7rep_circuit(perr: float, flag=True) -> Circuit:
     will initialize and measure the logical Pauli-Y eigenstate |+i>.
     In this particular circuit, the logical qubit is encoded in a Steane code
     while the logical ancilla is encoded into a seven-qubit repetition code.
+
+    :param perr:
+    :param flag:
+
+    :return:
     """
 
     noisy_circ = Circuit()
