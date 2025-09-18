@@ -1,6 +1,5 @@
 from stim import Circuit
 
-
 def noisy_repetition_encoder(circuit:Circuit,block:list[int],perr:float,flag=False) -> Circuit:
     r"""
     Method for appending a circuit that encodes the incoming state 
