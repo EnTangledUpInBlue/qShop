@@ -23,9 +23,11 @@ def noisy_repetition_measurement(
     block_set = set(block)
 
     for round in schedule:
+
         idle_set = [x for x in block_set - measured_set]
 
         for pair in round:
+
             idle_set.remove(pair[0])
             idle_set.remove(pair[1])
 

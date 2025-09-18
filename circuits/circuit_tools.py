@@ -19,22 +19,23 @@ def repetition_measurement_schedule(block: list[int]) -> list[list[tuple[int]]]:
     """
 
     n = len(block)
+    mark = int(n / 2)
 
     schedule = []
 
-    first_half = block[: int(n / 2)]
-    second_half = block[int(n / 2) :]
+    first_half = block[:mark]
+    second_half = block[mark:]
 
-    for jj in range(int(n / 2) - 1, 0, -1):
+    for jj in range(1, mark):
         round = []
-        round.append((first_half[jj - 1], first_half[jj]))
-        round.append((second_half[jj - 1], second_half[jj]))
+        round.append((first_half[-jj - 1], first_half[-jj]))
+        round.append((second_half[-jj - 1], second_half[-jj]))
         schedule.append(round)
 
-    finalround = [(first_half[0], second_half[0])]
-
     if n % 2:
-        finalround.append((second_half[-2], second_half[-1]))
+        schedule.append([(second_half[0], second_half[1])])
+
+    finalround = [(first_half[0], second_half[0])]
 
     schedule.append(finalround)
 

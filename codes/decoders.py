@@ -1,3 +1,6 @@
+# Functions related to decoding binary codes
+
+
 def bit_strings(n: int) -> list[tuple[int]]:
     r"""
     Function for generating a list of all bit strings of length n
