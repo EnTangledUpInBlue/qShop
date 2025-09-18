@@ -1,4 +1,5 @@
 from stim import Circuit
+from circuits.circuit_tools import repetition_measurement_schedule
 
 
 def noisy_repetition_measurement(
@@ -16,33 +17,30 @@ def noisy_repetition_measurement(
     :return:
     """
 
-    n = len(block)
+    schedule = repetition_measurement_schedule(block)
 
-    first_half = block[: int(n / 2)]
-    second_half = block[int(n / 2) :]
+    measured_set = set()
+    block_set = set(block)
 
-    for jj in range(int(n / 2) - 1):
-        circuit.append("CNOT", [first_half[jj], first_half[jj + 1]])
-        circuit.append("CNOT", [second_half[jj], second_half[jj + 1]])
+    for round in schedule:
+        idle_set = [x for x in block_set - measured_set]
 
-        circuit.append("DEPOLARIZE2", [first_half[jj], first_half[jj + 1]], perr)
-        circuit.append("DEPOLARIZE2", [second_half[jj], second_half[jj + 1]], perr)
+        for pair in round:
+            idle_set.remove(pair[0])
+            idle_set.remove(pair[1])
 
-    if n % 2:
-        circuit.append("CNOT", [second_half[-2], second_half[-1]])
+            circuit.append("CNOT", pair)
+            circuit.append("DEPOLARIZE2", pair, perr)
 
-        circuit.append("DEPOLARIZE2", [second_half[-2], second_half[-1]], perr)
+            circuit.append("DEPOLARIZE1", pair[1], perr)
+            circuit.append("MZ", pair[1])
 
-    circuit.append("CNOT", [first_half[0], second_half[0]])
-    circuit.append("DEPOLARIZE2", [first_half[0], second_half[0]], perr)
+            measured_set.add(pair[1])
 
-    # Add single-qubit depolarization for noisy single-qubit measurements
-    circuit.append("DEPOLARIZE1", block, perr)
+        circuit.append("DEPOLARIZE1", list(idle_set), perr)
 
+    circuit.append("DEPOLARIZE1", block[0], perr)
     circuit.append("MX", block[0])
-
-    for qub in block[1:]:
-        circuit.append("MZ", qub)
 
     return circuit
 
