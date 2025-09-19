@@ -1,5 +1,8 @@
 from stim import Circuit
-from circuits.circuit_tools import repetition_measurement_schedule
+from circuits.circuit_tools import (
+    repetition_measurement_schedule,
+    repetition_encoding_schedule,
+)
 
 
 def noisy_repetition_measurement(
@@ -55,7 +58,7 @@ def noisy_repetition_encoder(
     on block[0] into the repetition code on the full block, with an
     optional flag qubit
 
-    :param circuit: object of stim Circuit class
+    :param circuit: a stim Circuit
     :param block: list of qubits to encode the state into
     :param flag: A boolean indicating if a flag qubit should be used
 
@@ -63,48 +66,49 @@ def noisy_repetition_encoder(
 
     """
 
-    if flag:
-        blockmax = int(max(block))
-        block.append(blockmax + 1)
-
-    circuit.append("R", block[1:])
-    circuit.append("DEPOLARIZE1", block[1:], perr)
-
-    block_length = len(block)
-
-    first_half = block[: int(block_length / 2)]
-    second_half = block[int(block_length / 2) :]
-
-    circuit.append("CNOT", [first_half[0], second_half[0]])
-    circuit.append("DEPOLARIZE2", [first_half[0], second_half[0]], perr)
-
-    circuit.append("DEPOLARIZE1", first_half[1:] + second_half[1:], perr)
-
-    for ii in range(len(first_half) - 1):
-        circuit.append("CNOT", [first_half[ii], first_half[ii + 1]])
-        circuit.append("DEPOLARIZE2", [first_half[ii], first_half[ii + 1]], perr)
-
-        circuit.append("CNOT", [second_half[ii], second_half[ii + 1]])
-        circuit.append("DEPOLARIZE2", [second_half[ii], second_half[ii + 1]], perr)
-
-        for jj in range(len(second_half)):
-            if jj not in [ii, ii + 1]:
-                circuit.append("DEPOLARIZE1", [second_half[jj]], perr)
-                if jj < len(first_half):
-                    circuit.append("DEPOLARIZE1", [first_half[jj]], perr)
-
-    if block_length % 2:
-        circuit.append("CNOT", [second_half[-2], second_half[-1]])
-        circuit.append("DEPOLARIZE2", [second_half[-2], second_half[-1]], perr)
-        circuit.append("DEPOLARIZE1", first_half + second_half[:-2], perr)
+    schedule = repetition_encoding_schedule(block)
 
     if flag:
-        circuit.append("CNOT", [first_half[-1], second_half[-1]])
-        circuit.append("DEPOLARIZE2", [first_half[-1], second_half[-1]], perr)
-        circuit.append("DEPOLARIZE1", first_half[:-1] + second_half[:-1], perr)
+        mark = int(len(block) / 2)
 
-        circuit.append("DEPOLARIZE1", second_half[-1], perr)
-        circuit.append("MRZ", second_half[-1])
+        flag_label = int(max(block)) + 1
+
+        if len(block) % 2:
+            schedule[-1].append((block[mark - 1], flag_label))
+        else:
+            schedule.append([(block[mark - 1], flag_label)])
+
+        schedule.append([(block[-1], flag_label)])
+
+    # set of active qubits in the circuit
+    active_set = set([block[0]])
+
+    for round in schedule:
+        # set of qubits active in this round
+        round_set = set()
+        for pair in round:
+            round_set = round_set.union(set(pair))
+
+            # First determine if qubits need initialization
+            for qubit in pair:
+                if qubit not in active_set:
+                    circuit.append("R", qubit)
+                    circuit.append("DEPOLARIZE1", qubit, perr)
+
+                    active_set.add(qubit)
+
+            # Apply noisy CNOT to pair
+            circuit.append("CNOT", pair)
+            circuit.append("DEPOLARIZE2", pair, perr)
+
+        # Apply noise to idle qubits in this round
+        idle_set = active_set - round_set
+        circuit.append("DEPOLARIZE1", idle_set, perr)
+
+    if flag:
+        # Measure the flag qubit
+        circuit.append("DEPOLARIZE1", flag_label, perr)
+        circuit.append("MR", flag_label)
 
     return circuit
 
@@ -154,7 +158,7 @@ def noisy_steane_encoder(circuit: Circuit, block: list[int], perr: float) -> Cir
     return circuit
 
 
-def noisy_encoded_y(
+def noisy_encoded_cy(
     circuit: Circuit, target_block: list[int], control_block: list[int], perr: float
 ):
     r"""
@@ -223,13 +227,13 @@ def construct_steane_7rep_circuit(perr: float, flag=True) -> Circuit:
     noisy_circ = noisy_repetition_encoder(noisy_circ, repnBlock, perr, flag)
 
     if flag:
-        noisy_circ = noisy_encoded_y(noisy_circ, steaneBlock, repnBlock[:-1], perr)
+        noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlock, repnBlock[:-1], perr)
         noisy_circ.append("DEPOLARIZE1", repnBlock[:-1], perr)
         noisy_circ.append("MX", repnBlock[:-1])  # readout transversal logical-X
 
     else:
         # Apply the encoded controlled-Y circuit
-        noisy_circ = noisy_encoded_y(noisy_circ, steaneBlock, repnBlock, perr)
+        noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlock, repnBlock, perr)
 
         # noisy readout transversal logical-X
         noisy_circ.append("DEPOLARIZE1", repnBlock, perr)
@@ -272,13 +276,13 @@ def construct_steane_3rep_circuit(perr: float, flag=True) -> Circuit:
     )  # include flag qubit in encoder
 
     if flag:
-        noisy_circ = noisy_encoded_y(noisy_circ, [1, 4, 6], repnBlock[:-1], perr)
+        noisy_circ = noisy_encoded_cy(noisy_circ, [1, 4, 6], repnBlock[:-1], perr)
         # noisy readout transversal logical-X
         noisy_circ.append("DEPOLARIZE1", repnBlock[:-1], perr)
         noisy_circ.append("MX", repnBlock[:-1])
 
     else:
-        noisy_circ = noisy_encoded_y(noisy_circ, [1, 4, 6], repnBlock, perr)
+        noisy_circ = noisy_encoded_cy(noisy_circ, [1, 4, 6], repnBlock, perr)
         # noisy readout transversal logical-X
         noisy_circ.append("DEPOLARIZE1", repnBlock, perr)
         noisy_circ.append("MX", repnBlock)
@@ -317,7 +321,7 @@ def construct_steane_steane_circuit(perr: float) -> Circuit:
     noisy_circ = noisy_steane_encoder(noisy_circ, steaneBlockB, perr)
 
     # apply noisy transversal Y between two steane encoded blocks
-    noisy_circ = noisy_encoded_y(noisy_circ, steaneBlockA, steaneBlockB, perr)
+    noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlockA, steaneBlockB, perr)
 
     # noisy readout transversal logical-X
     noisy_circ.append("DEPOLARIZE1", steaneBlockB, perr)
