@@ -2,6 +2,22 @@
 
 from typing import List, Set, Dict
 
+__all__ = [
+    "commutation_test",
+    "compute_kernel",
+    "compute_logicals",
+    "compute_pivots",
+    "remove_duplicates_empties",
+    "image_checker",
+    "set_order",
+    "order_set_list",
+    "generate_check_dict",
+    "generate_syndrome_dict",
+    "pcm_to_sets",
+    "max_elem",
+    "min_elem",
+]
+
 
 def commutation_test(Sx: List[Set[int]], Sz: List[Set[int]]) -> bool:
     r"""

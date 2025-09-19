@@ -1,5 +1,13 @@
 # Functions related to decoding binary codes
 
+__all__ = [
+    "bit_strings",
+    "steane_transversal_syndrome",
+    "steane_transversal_decoder",
+    "repetition_transversal_xdecoder",
+    "repetition_transversal_zdecoder",
+]
+
 
 def bit_strings(n: int) -> list[tuple[int]]:
     r"""

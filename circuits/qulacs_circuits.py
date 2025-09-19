@@ -6,6 +6,19 @@ from qulacs.gate import CNOT, H, RY, S, Sdag, P0
 # from qulacs.gate import X, Y, Z, P0
 from qulacs.gate import DepolarizingNoise, TwoQubitDepolarizingNoise
 
+__all__ = [
+    "controlled_hadamard",
+    "controlled_y",
+    "magic_state_initialization",
+    "repetition_encoder",
+    "steane_encoder",
+    "noisy_controlled_hadamard",
+    "noisy_controlled_y",
+    "noisy_magic_state_initialization",
+    "noisy_repetition_encoder",
+    "noisy_steane_encoder",
+]
+
 
 def controlled_hadamard(
     state: QuantumState, control_block: list[int], target_block: list[int]

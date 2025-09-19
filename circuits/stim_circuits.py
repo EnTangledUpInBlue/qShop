@@ -4,6 +4,17 @@ from circuits.circuit_tools import (
     repetition_encoding_schedule,
 )
 
+__all__ = [
+    "noisy_repetition_measurement",
+    "noisy_repetition_transversal_mx",
+    "noisy_repetition_encoder",
+    "noisy_steane_encoder",
+    "noisy_encoded_cy",
+    "construct_steane_7rep_circuit",
+    "construct_steane_3rep_circuit",
+    "construct_steane_steane_circuit",
+]
+
 
 def noisy_repetition_measurement(
     circuit: Circuit, block: list[int], perr: float
