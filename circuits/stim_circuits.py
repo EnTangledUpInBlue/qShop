@@ -50,6 +50,27 @@ def noisy_repetition_measurement(
     return circuit
 
 
+def noisy_repetition_transversal_mx(
+    circuit: Circuit, block: list[int], perr: float
+) -> Circuit:
+    r"""
+    Method for appending a circuit for a measurement of
+    a repetition-encoded qubit on the set of qubits
+    indicated by block
+
+    :param circuit:
+    :param block:
+    :param perr:
+
+    :return:
+    """
+
+    circuit.append("DEPOLARIZE1", block, perr)
+    circuit.append("MX", block, perr)
+
+    return circuit
+
+
 def noisy_repetition_encoder(
     circuit: Circuit, block: list[int], perr: float, flag=False
 ) -> Circuit:
