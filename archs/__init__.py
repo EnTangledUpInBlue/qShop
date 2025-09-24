@@ -1,1 +1,1 @@
-from qubit_archs import rotated_qubit_architecture,planar_qubit_architecture
+from qubit_archs import rotated_qubit_architecture, planar_qubit_architecture
