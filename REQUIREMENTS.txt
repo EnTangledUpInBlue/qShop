@@ -4,3 +4,4 @@ networkx
 scipy
 pymatching
 jupyter
+pre-commit

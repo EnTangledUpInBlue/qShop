@@ -4,3 +4,4 @@ from .standard_surface_code_coordinates import surf_stabilizer_generators
 from .bivariate_bicycle_checks import pcm
 from .example_codes import *
 from .code_tools import *
+from .decoders import *
