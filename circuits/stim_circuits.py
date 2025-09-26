@@ -9,6 +9,8 @@ __all__ = [
     "noisy_repetition_transversal_mx",
     "noisy_repetition_encoder",
     "noisy_steane_encoder",
+    "noisy_steane_plus",
+    "noisy_steane_zero",
     "noisy_encoded_cy",
     "construct_steane_7rep_circuit",
     "construct_steane_3rep_circuit",
@@ -83,7 +85,7 @@ def noisy_repetition_transversal_mx(
 
 
 def noisy_repetition_encoder(
-    circuit: Circuit, block: list[int], perr: float, flag=False
+    circuit: Circuit, block: list[int], perr: float, verify=False
 ) -> Circuit:
     r"""
     Method for appending a circuit that encodes the incoming state
@@ -92,7 +94,7 @@ def noisy_repetition_encoder(
 
     :param circuit: a stim Circuit
     :param block: list of qubits to encode the state into
-    :param flag: A boolean indicating if a flag qubit should be used
+    :param verify: A boolean indicating if a flag qubit should be used
 
     :return: a stim Circuit
 
@@ -100,7 +102,7 @@ def noisy_repetition_encoder(
 
     schedule = repetition_encoding_schedule(block)
 
-    if flag:
+    if verify:
         mark = int(len(block) / 2)
 
         flag_label = int(max(block)) + 1
@@ -137,7 +139,7 @@ def noisy_repetition_encoder(
         idle_set = active_set - round_set
         circuit.append("DEPOLARIZE1", idle_set, perr)
 
-    if flag:
+    if verify:
         # Measure the flag qubit
         circuit.append("DEPOLARIZE1", flag_label, perr)
         circuit.append("MR", flag_label)
