@@ -145,7 +145,9 @@ def noisy_repetition_encoder(
     return circuit
 
 
-def noisy_steane_plus(circuit: Circuit, block: list[int], perr: float) -> Circuit:
+def noisy_steane_plus(
+    circuit: Circuit, block: list[int], perr: float, verify=False
+) -> Circuit:
     r"""
     Specialized circuit for preparing the logical |+> state of the
     Steane code, adapted from Paetznick and Reichardt arXiv:1106.2190
@@ -153,6 +155,7 @@ def noisy_steane_plus(circuit: Circuit, block: list[int], perr: float) -> Circui
     :param circuit:
     :param block:
     :param perr:
+    :param verify:
 
     :return:
     """
@@ -162,6 +165,10 @@ def noisy_steane_plus(circuit: Circuit, block: list[int], perr: float) -> Circui
         [(4, 1), (0, 2), (6, 3)],
         [(5, 1), (4, 6)],
     ]
+
+    if verify:
+        flag = max(block) + 1
+        schedule.extend([[(flag, block[0])], [(flag, block[5])], [(flag, block[6])]])
 
     circuit.append("RX", [block[0]] + block[4:])
     circuit.append("RZ", block[1:4])
@@ -189,10 +196,16 @@ def noisy_steane_plus(circuit: Circuit, block: list[int], perr: float) -> Circui
         idle_set = active_set - round_set
         circuit.append("DEPOLARIZE1", idle_set, perr)
 
+    if verify:
+        circuit.append("DEPOLARIZE1", flag, perr)
+        circuit.append("MX", flag)
+
     return circuit
 
 
-def noisy_steane_zero(circuit: Circuit, block: list[int], perr: float) -> Circuit:
+def noisy_steane_zero(
+    circuit: Circuit, block: list[int], perr: float, verify=False
+) -> Circuit:
     r"""
     Specialized circuit for preparing the logical |0> state of the
     Steane code, adapted from Paetznick and Reichardt arXiv:1106.2190
@@ -200,6 +213,7 @@ def noisy_steane_zero(circuit: Circuit, block: list[int], perr: float) -> Circui
     :param circuit:
     :param block:
     :param perr:
+    :param verify:
 
     :return:
     """
@@ -209,6 +223,10 @@ def noisy_steane_zero(circuit: Circuit, block: list[int], perr: float) -> Circui
         [(4, 1), (2, 0), (3, 6)],
         [(1, 5), (6, 4)],
     ]
+
+    if verify:
+        flag = max(block) + 1
+        schedule.extend([[(block[0], flag)], [(block[5], flag)], [(block[6], flag)]])
 
     circuit.append("RZ", [block[0]] + block[4:])
     circuit.append("RX", block[1:4])
@@ -235,6 +253,10 @@ def noisy_steane_zero(circuit: Circuit, block: list[int], perr: float) -> Circui
         # Apply noise to idle qubits in this round
         idle_set = active_set - round_set
         circuit.append("DEPOLARIZE1", idle_set, perr)
+
+    if verify:
+        circuit.append("DEPOLARIZE1", flag, perr)
+        circuit.append("MZ", flag)
 
     return circuit
 
