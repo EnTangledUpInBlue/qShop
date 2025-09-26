@@ -145,6 +145,100 @@ def noisy_repetition_encoder(
     return circuit
 
 
+def noisy_steane_plus(circuit: Circuit, block: list[int], perr: float) -> Circuit:
+    r"""
+    Specialized circuit for preparing the logical |+> state of the
+    Steane code, adapted from Paetznick and Reichardt arXiv:1106.2190
+
+    :param circuit:
+    :param block:
+    :param perr:
+
+    :return:
+    """
+
+    schedule = [
+        [(0, 1), (5, 3), (6, 2)],
+        [(4, 1), (0, 2), (6, 3)],
+        [(5, 1), (4, 6)],
+    ]
+
+    circuit.append("RX", [block[0]] + block[4:])
+    circuit.append("RZ", block[1:4])
+
+    # set of active qubits in the circuit
+    active_set = set()
+
+    for round in schedule:
+        # set of qubits active in this round
+        round_set = set()
+        for pair in round:
+            round_set = round_set.union(set(pair))
+
+            # First determine if qubits need initialization noise
+            for qubit in pair:
+                if qubit not in active_set:
+                    circuit.append("DEPOLARIZE1", qubit, perr)
+                    active_set.add(qubit)
+
+            # Apply noisy CNOT to pair
+            circuit.append("CNOT", pair)
+            circuit.append("DEPOLARIZE2", pair, perr)
+
+        # Apply noise to idle qubits in this round
+        idle_set = active_set - round_set
+        circuit.append("DEPOLARIZE1", idle_set, perr)
+
+    return circuit
+
+
+def noisy_steane_zero(circuit: Circuit, block: list[int], perr: float) -> Circuit:
+    r"""
+    Specialized circuit for preparing the logical |0> state of the
+    Steane code, adapted from Paetznick and Reichardt arXiv:1106.2190
+
+    :param circuit:
+    :param block:
+    :param perr:
+
+    :return:
+    """
+
+    schedule = [
+        [(1, 0), (3, 5), (2, 6)],
+        [(4, 1), (2, 0), (3, 6)],
+        [(1, 5), (6, 4)],
+    ]
+
+    circuit.append("RZ", [block[0]] + block[4:])
+    circuit.append("RX", block[1:4])
+
+    # set of active qubits in the circuit
+    active_set = set()
+
+    for round in schedule:
+        # set of qubits active in this round
+        round_set = set()
+        for pair in round:
+            round_set = round_set.union(set(pair))
+
+            # First determine if qubits need initialization noise
+            for qubit in pair:
+                if qubit not in active_set:
+                    circuit.append("DEPOLARIZE1", qubit, perr)
+                    active_set.add(qubit)
+
+            # Apply noisy CNOT to pair
+            circuit.append("CNOT", pair)
+            circuit.append("DEPOLARIZE2", pair, perr)
+
+        # Apply noise to idle qubits in this round
+        idle_set = active_set - round_set
+        circuit.append("DEPOLARIZE1", idle_set, perr)
+
+    return circuit
+
+
 def noisy_steane_encoder(circuit: Circuit, block: list[int], perr: float) -> Circuit:
     r"""
     Method for encoding an initial state, given as the
