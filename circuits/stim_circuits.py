@@ -170,7 +170,8 @@ def noisy_steane_plus(
 
     if verify:
         flag = max(block) + 1
-        schedule.extend([[(flag, block[0])], [(flag, block[5])], [(flag, block[6])]])
+        block.append(flag)
+        schedule.extend([[(7, 0)], [(7, 5)], [(7, 6)]])
 
     circuit.append("RX", [block[0]] + block[4:])
     circuit.append("RZ", block[1:4])
@@ -182,25 +183,30 @@ def noisy_steane_plus(
         # set of qubits active in this round
         round_set = set()
         for pair in round:
+            control = block[pair[0]]
+            target = block[pair[1]]
+
             round_set = round_set.union(set(pair))
 
             # First determine if qubits need initialization noise
             for qubit in pair:
                 if qubit not in active_set:
-                    circuit.append("DEPOLARIZE1", qubit, perr)
+                    circuit.append("DEPOLARIZE1", block[qubit], perr)
                     active_set.add(qubit)
 
             # Apply noisy CNOT to pair
-            circuit.append("CNOT", pair)
-            circuit.append("DEPOLARIZE2", pair, perr)
+            circuit.append("CNOT", [control, target])
+            circuit.append("DEPOLARIZE2", [control, target], perr)
 
         # Apply noise to idle qubits in this round
         idle_set = active_set - round_set
-        circuit.append("DEPOLARIZE1", idle_set, perr)
+        idle_list = [block[q] for q in idle_set]
+        circuit.append("DEPOLARIZE1", idle_list, perr)
 
     if verify:
         circuit.append("DEPOLARIZE1", flag, perr)
         circuit.append("MX", flag)
+        block.remove(flag)
 
     return circuit
 
@@ -228,7 +234,8 @@ def noisy_steane_zero(
 
     if verify:
         flag = max(block) + 1
-        schedule.extend([[(block[0], flag)], [(block[5], flag)], [(block[6], flag)]])
+        block.append(flag)
+        schedule.extend([[(0, 7)], [(5, 7)], [(6, 7)]])
 
     circuit.append("RZ", [block[0]] + block[4:])
     circuit.append("RX", block[1:4])
@@ -259,6 +266,7 @@ def noisy_steane_zero(
     if verify:
         circuit.append("DEPOLARIZE1", flag, perr)
         circuit.append("MZ", flag)
+        block.remove(flag)
 
     return circuit
 
@@ -327,7 +335,8 @@ def noisy_encoded_cy(
 
     for ii in range(n):
         circuit.append("S_DAG", target_block[ii])
-        circuit.append("DEPOLARIZE1", [target_block[ii], control_block[ii]], perr)
+        # circuit.append("DEPOLARIZE1", [target_block[ii], control_block[ii]], perr)
+        circuit.append("DEPOLARIZE1", [target_block[ii]], perr)
 
     # Noise model assumes that all controlled-operations are performed in parallel
     for ii in range(n):
@@ -336,7 +345,8 @@ def noisy_encoded_cy(
 
     for ii in range(n):
         circuit.append("S", target_block[ii])
-        circuit.append("DEPOLARIZE1", [target_block[ii], control_block[ii]], perr)
+        # circuit.append("DEPOLARIZE1", [target_block[ii], control_block[ii]], perr)
+        circuit.append("DEPOLARIZE1", [target_block[ii]], perr)
 
     return circuit
 
