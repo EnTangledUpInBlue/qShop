@@ -12,9 +12,6 @@ __all__ = [
     "noisy_steane_plus",
     "noisy_steane_zero",
     "noisy_encoded_cy",
-    "construct_steane_7rep_circuit",
-    "construct_steane_3rep_circuit",
-    "construct_steane_steane_circuit",
 ]
 
 
@@ -85,7 +82,7 @@ def noisy_repetition_transversal_mx(
 
 
 def noisy_repetition_encoder(
-    circuit: Circuit, block: list[int], perr: float, verify=False
+    circuit: Circuit, block: list[int], perr: float, flag=False
 ) -> Circuit:
     r"""
     Method for appending a circuit that encodes the incoming state
@@ -94,7 +91,8 @@ def noisy_repetition_encoder(
 
     :param circuit: a stim Circuit
     :param block: list of qubits to encode the state into
-    :param verify: A boolean indicating if a flag qubit should be used
+    :param flag: A boolean indicating if an error-detecting flag
+        qubit should be used
 
     :return: a stim Circuit
 
@@ -102,7 +100,7 @@ def noisy_repetition_encoder(
 
     schedule = repetition_encoding_schedule(block)
 
-    if verify:
+    if flag:
         mark = int(len(block) / 2)
 
         flag_label = int(max(block)) + 1
@@ -139,7 +137,7 @@ def noisy_repetition_encoder(
         idle_set = active_set - round_set
         circuit.append("DEPOLARIZE1", idle_set, perr)
 
-    if verify:
+    if flag:
         # Measure the flag qubit
         circuit.append("DEPOLARIZE1", flag_label, perr)
         circuit.append("MR", flag_label)
@@ -349,145 +347,3 @@ def noisy_encoded_cy(
         circuit.append("DEPOLARIZE1", [target_block[ii]], perr)
 
     return circuit
-
-
-def construct_steane_7rep_circuit(perr: float, flag=True) -> Circuit:
-    r"""
-    Method for producing a noisy circuit that in the absence of errors
-    will initialize and measure the logical Pauli-Y eigenstate |+i>.
-    In this particular circuit, the logical qubit is encoded in a Steane code
-    while the logical ancilla is encoded into a seven-qubit repetition code.
-
-    :param perr:
-    :param flag:
-
-    :return:
-    """
-
-    noisy_circ = Circuit()
-
-    steaneBlock = [0, 1, 2, 3, 4, 5, 6]
-    repnBlock = [7, 8, 9, 10, 11, 12, 13]
-
-    # initialize seed Y-eigenstate: S |+> = |+i>
-
-    noisy_circ.append("RX", steaneBlock[0])
-    noisy_circ.append("S", steaneBlock[0])
-
-    # initialize seed state for ancilla |+>
-    noisy_circ.append("RX", repnBlock[0])
-
-    # apply single-qubit depolarization to initialized states
-    noisy_circ.append("DEPOLARIZE1", [steaneBlock[0], repnBlock[0]], perr)
-
-    # add noisy encoding circuits
-    noisy_circ = noisy_steane_encoder(noisy_circ, steaneBlock, perr)
-
-    # default repetition encoder includes flag qubit
-    noisy_circ = noisy_repetition_encoder(noisy_circ, repnBlock, perr, flag)
-
-    if flag:
-        noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlock, repnBlock[:-1], perr)
-        noisy_circ.append("DEPOLARIZE1", repnBlock[:-1], perr)
-        noisy_circ.append("MX", repnBlock[:-1])  # readout transversal logical-X
-
-    else:
-        # Apply the encoded controlled-Y circuit
-        noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlock, repnBlock, perr)
-
-        # noisy readout transversal logical-X
-        noisy_circ.append("DEPOLARIZE1", repnBlock, perr)
-        noisy_circ.append("MX", repnBlock)
-
-    # ideal readout transversal logical-Y
-    noisy_circ.append("MY", steaneBlock)
-
-    return noisy_circ
-
-
-def construct_steane_3rep_circuit(perr: float, flag=True) -> Circuit:
-    r"""
-    Method for producing a noisy circuit that in the absence of errors
-    will initialize and measure the logical Pauli-Y eigenstate |+i>.
-    In this particular circuit, the logical qubit is encoded in a Steane code
-    while the logical ancilla is encoded into a seven-qubit repetition code.
-
-    In this case the repetition encoding is only 3 qubits but there is still
-    a transversal CNOT to be performed.
-    """
-
-    noisy_circ = Circuit()
-
-    steaneBlock = [0, 1, 2, 3, 4, 5, 6]
-    repnBlock = [7, 8, 9]
-
-    # initialize the Y-eigenstate: S |+> = |+i>
-
-    noisy_circ.append("RX", steaneBlock[0])
-    noisy_circ.append("S", steaneBlock[0])
-
-    noisy_circ.append("RX", repnBlock[0])
-
-    noisy_circ.append("DEPOLARIZE1", [steaneBlock[0], repnBlock[0]], perr)
-
-    noisy_circ = noisy_steane_encoder(noisy_circ, steaneBlock, perr)
-    noisy_circ = noisy_repetition_encoder(
-        noisy_circ, repnBlock, perr, flag
-    )  # include flag qubit in encoder
-
-    if flag:
-        noisy_circ = noisy_encoded_cy(noisy_circ, [1, 4, 6], repnBlock[:-1], perr)
-        # noisy readout transversal logical-X
-        noisy_circ.append("DEPOLARIZE1", repnBlock[:-1], perr)
-        noisy_circ.append("MX", repnBlock[:-1])
-
-    else:
-        noisy_circ = noisy_encoded_cy(noisy_circ, [1, 4, 6], repnBlock, perr)
-        # noisy readout transversal logical-X
-        noisy_circ.append("DEPOLARIZE1", repnBlock, perr)
-        noisy_circ.append("MX", repnBlock)
-
-    # ideal readout transversal logical-Y
-    noisy_circ.append("MY", steaneBlock)
-
-    return noisy_circ
-
-
-def construct_steane_steane_circuit(perr: float) -> Circuit:
-    r"""
-    Method for producing a noisy circuit that in the absence of errors
-    will initialize and measure the logical Pauli-Y eigenstate |+i>.
-    In this particular circuit, the both the logical qubit and ancilla are
-    encoded into the Steane code.
-    """
-
-    noisy_circ = Circuit()
-
-    steaneBlockA = [0, 1, 2, 3, 4, 5, 6]
-    steaneBlockB = [7, 8, 9, 10, 11, 12, 13]
-
-    # prep initial state to |+i>
-    noisy_circ.append("RX", steaneBlockA[0])
-    noisy_circ.append("S", steaneBlockA[0])
-
-    # prep unencoded ancilla in |+>
-    noisy_circ.append("RX", steaneBlockB[0])
-
-    # apply noise for qubit initialization
-    noisy_circ.append("DEPOLARIZE1", [steaneBlockA[0], steaneBlockB[0]], perr)
-
-    # apply noisy encoder circuits for each qubit
-    noisy_circ = noisy_steane_encoder(noisy_circ, steaneBlockA, perr)
-    noisy_circ = noisy_steane_encoder(noisy_circ, steaneBlockB, perr)
-
-    # apply noisy transversal Y between two steane encoded blocks
-    noisy_circ = noisy_encoded_cy(noisy_circ, steaneBlockA, steaneBlockB, perr)
-
-    # noisy readout transversal logical-X
-    noisy_circ.append("DEPOLARIZE1", steaneBlockB, perr)
-    noisy_circ.append("MX", steaneBlockB)
-
-    # ideal readout transversal logical-Y
-    noisy_circ.append("MY", steaneBlockA)
-
-    return noisy_circ
