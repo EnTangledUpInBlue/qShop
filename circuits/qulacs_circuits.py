@@ -1,5 +1,5 @@
 import numpy as np
-from qulacs import QuantumState, QuantumCircuit
+from qulacs import QuantumState
 from qulacs.state import tensor_product, drop_qubit
 from qulacs.gate import CNOT, H, RY, S, Sdag, P0
 
@@ -7,8 +7,8 @@ from qulacs.gate import CNOT, H, RY, S, Sdag, P0
 from qulacs.gate import DepolarizingNoise, TwoQubitDepolarizingNoise
 
 __all__ = [
-    "controlled_hadamard",
-    "controlled_y",
+    "encoded_controlled_hadamard",
+    "encoded_controlled_y",
     "magic_state_initialization",
     "repetition_encoder",
     "steane_encoder",
@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-def controlled_hadamard(
+def encoded_controlled_hadamard(
     state: QuantumState, control_block: list[int], target_block: list[int]
 ) -> QuantumState:
     r"""
@@ -30,7 +30,7 @@ def controlled_hadamard(
     :param target_block: List of integers specifying the target block which is Steane-encoded
     :param control_block: List of integers specifying the control block of the logical controlled operation.
 
-    :returns: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
+    :return: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
     """
 
     angle = np.pi / 4.0
@@ -50,7 +50,7 @@ def controlled_hadamard(
     return state
 
 
-def controlled_y(
+def encoded_controlled_y(
     state: QuantumState, control_block: list[int], target_block: list[int]
 ) -> QuantumState:
     r"""
@@ -60,7 +60,7 @@ def controlled_y(
     :param target_block: List of integers specifying the target block which is Steane-encoded
     :param control_block: List of integers specifying the control block of the logical controlled operation.
 
-    :returns: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
+    :return: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
     """
 
     for ii in range(len(target_block)):
@@ -89,7 +89,11 @@ def magic_state_initialization(
 
     """
 
+    # Initialize register in the |+> state
+    P0(qubit).update_quantum_state(state)
     H(qubit).update_quantum_state(state)
+
+    # Rotate the state about the Y-axis
     RY(qubit, angle).update_quantum_state(state)
 
     return state
@@ -106,7 +110,7 @@ def repetition_encoder(
     :param block: A list of integers indicating the locations of the qubits in the block.
     :param flag: A Boolean indicating if a flag qubit will be used for the encoding.
 
-    :returns: A QuantumState representing the updated state where qubit block[0] has been
+    :return: A QuantumState representing the updated state where qubit block[0] has been
             encoded into the qubits of block.
     """
 
@@ -152,30 +156,26 @@ def steane_encoder(state: QuantumState, block: list[int]) -> QuantumState:
     :param state: A QuantumState representing the qubit state to be encoded.
     :param block: A list of integers indicating the locations of the qubits in the block.
 
-    :returns: A QuantumState representing the updated state where qubit block[0] has been
+    :return: A QuantumState representing the updated state where qubit block[0] has been
             encoded into the qubits of block.
     """
+
+    schedule = [
+        [(0, 6), (3, 4)],
+        [(0, 5), (1, 4), (3, 6)],
+        [(1, 0), (2, 4), (3, 5)],
+        [(2, 0), (1, 5)],
+        [(2, 6)],
+    ]
 
     for qub in range(1, 4):
         H(block[qub]).update_quantum_state(state)
 
     # Following the convention in FIG. 3.
 
-    CNOT(0, 6).update_quantum_state(state)
-    CNOT(3, 4).update_quantum_state(state)
-
-    CNOT(0, 5).update_quantum_state(state)
-    CNOT(1, 4).update_quantum_state(state)
-    CNOT(3, 6).update_quantum_state(state)
-
-    CNOT(1, 0).update_quantum_state(state)
-    CNOT(2, 4).update_quantum_state(state)
-    CNOT(3, 5).update_quantum_state(state)
-
-    CNOT(2, 0).update_quantum_state(state)
-    CNOT(1, 5).update_quantum_state(state)
-
-    CNOT(2, 6).update_quantum_state(state)
+    for round in schedule:
+        for pair in round:
+            CNOT(pair[0], pair[1]).update_quantum_state(state)
 
     return state
 
@@ -191,22 +191,20 @@ def noisy_controlled_hadamard(
     :param target_block: List of integers specifying the target block which is Steane-encoded
     :param control_block: List of integers specifying the control block of the logical controlled operation.
 
-    :returns: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
+    :return: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
     """
 
-    n = state.get_qubit_count()
     angle = np.pi / 4.0
 
     for ii in range(len(target_block)):
-        circuit = QuantumCircuit(n)
-        circuit.add_RY_gate(target_block[ii], -angle)
-        circuit.update_quantum_state(state)
+
+        RY(target_block[ii], -angle).update_quantum_state(state)
 
         # single-qubit gate noise
         DepolarizingNoise(target_block[ii], perr).update_quantum_state(state)
 
         # idling noise on control block
-        DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
+        # DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
 
     for ii in range(len(target_block)):
         qtarget = target_block[ii]
@@ -216,17 +214,14 @@ def noisy_controlled_hadamard(
         TwoQubitDepolarizingNoise(qtarget, qcontrol, perr).update_quantum_state(state)
 
     for ii in range(len(target_block)):
-        circuit = QuantumCircuit(n)
-        circuit.add_RY_gate(target_block[ii], angle)
-        circuit.update_quantum_state(state)
+
+        RY(target_block[ii], angle).update_quantum_state(state)
 
         # single-qubit gate noise
         DepolarizingNoise(target_block[ii], perr).update_quantum_state(state)
 
         # idling noise on control block
         DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
-
-    circuit.update_quantum_state(state)
 
     return state
 
@@ -242,7 +237,7 @@ def noisy_controlled_y(
     :param target_block: List of integers specifying the target block which is Steane-encoded
     :param control_block: List of integers specifying the control block of the logical controlled operation.
 
-    :returns: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
+    :return: An update of the input state with the ancilla now adjoined and controlled-Hadamard gate implemented.
     """
 
     for ii in range(len(target_block)):
@@ -253,7 +248,7 @@ def noisy_controlled_y(
         DepolarizingNoise(target_block[ii], perr).update_quantum_state(state)
 
         # idling noise on control block
-        DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
+        # DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
 
     for ii in range(len(target_block)):
         qtarget = target_block[ii]
@@ -269,7 +264,7 @@ def noisy_controlled_y(
         DepolarizingNoise(target_block[ii], perr).update_quantum_state(state)
 
         # idling noise on control block
-        DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
+        # DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
 
     return state
 
@@ -277,15 +272,21 @@ def noisy_controlled_y(
 def noisy_magic_state_initialization(
     state: QuantumState, qubit: int, perr: float, angle=np.pi / 4.0
 ) -> QuantumState:
+    r"""
+    A method that takes a QuantumState and initializes the register
+    qubit RY(angle)|+>
 
-    n = state.get_qubit_count()
+    :param state: a QuantumState object on which to act
+    :param qubit: the qubit register to initialize
+    :param perr: the single-qubit depolarizing noise strength
+    :param angle: the angle about the Y-axis that |+> is to be
+        rotated
 
-    circuit = QuantumCircuit(n)
+    :return: a QuantumState object
+    """
 
-    circuit.add_H_gate(qubit)
-    circuit.add_RY_gate(qubit, angle)
-
-    circuit.update_quantum_state(state)
+    H(qubit).update_quantum_state(state)
+    RY(qubit, angle).update_quantum_state(state)
 
     DepolarizingNoise(qubit, perr).update_quantum_state(state)
 
@@ -303,7 +304,7 @@ def noisy_repetition_encoder(
     :param block: A list of integers indicating the locations of the qubits in the block.
     :param flag: A Boolean indicating if a flag qubit will be used for the encoding.
 
-    :returns: A QuantumState representing the updated state where qubit block[0] has been
+    :return: A QuantumState representing the updated state where qubit block[0] has been
             encoded into the logical state of the block.
     """
 
@@ -382,37 +383,27 @@ def noisy_steane_encoder(
 
     :param state: A QuantumState representing the qubit state to be encoded.
     :param block: A list of integers indicating the locations of the qubits in the block.
+    :param perr: a float representing the noise strength in a circuit-level noise model.
 
-    :returns: A QuantumState representing the updated state where qubit block[0] has been
+    :return: A QuantumState representing the updated state where qubit block[0] has been
             encoded into the qubits of block.
     """
 
-    n = state.get_qubit_count()
-
-    circuit = QuantumCircuit(n)
+    schedule = [
+        [(0, 6), (3, 4)],
+        [(0, 5), (1, 4), (3, 6)],
+        [(1, 0), (2, 4), (3, 5)],
+        [(2, 0), (1, 5)],
+        [(2, 6)],
+    ]
 
     for qub in range(1, 4):
-        circuit.add_H_gate(block[qub])
+        H(block[qub]).update_quantum_state(state)
 
     # Following the convention in FIG. 3.
     # Still needs ****NOISE****
-
-    circuit.add_CNOT_gate(0, 6)
-    circuit.add_CNOT_gate(3, 4)
-
-    circuit.add_CNOT_gate(0, 5)
-    circuit.add_CNOT_gate(1, 4)
-    circuit.add_CNOT_gate(3, 6)
-
-    circuit.add_CNOT_gate(1, 0)
-    circuit.add_CNOT_gate(2, 4)
-    circuit.add_CNOT_gate(3, 5)
-
-    circuit.add_CNOT_gate(2, 0)
-    circuit.add_CNOT_gate(1, 5)
-
-    circuit.add_CNOT_gate(2, 6)
-
-    circuit.update_quantum_state(state)
+    for round in schedule:
+        for pair in round:
+            CNOT(pair[0], pair[1]).update_quantum_state(state)
 
     return state
