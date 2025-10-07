@@ -139,7 +139,7 @@ def repetition_encoder(
 
     if flag:
         CNOT(first_half[-1], second_half[-1]).update_quantum_state(state)
-        print(first_half[-1], second_half[-1])
+        # print(first_half[-1], second_half[-1])
 
     if flag:
         state = drop_qubit(state, [block[-1]], [0])
@@ -370,6 +370,51 @@ def noisy_repetition_encoder(
         # state = drop_qubit(state,[n],[0]) # post-select on trivial outcome
         block.remove(n)
         P0(n).update_quantum_state(state)
+
+    return state
+
+
+def noisy_steane_decoder(
+    state: QuantumState, block: list[int], perr: float
+) -> QuantumState:
+    r"""
+    Decoder circuit for the Steane code. Leaves the last six
+    qubit registers of block in the following
+    Steane code stabilizers
+
+    X0 X1 X4 X5
+    X0 X2 X4 X6
+    X3 X4 X5 X6
+    Z1 Z2 Z3 Z4
+    Z0 Z2 Z3 Z5
+    Z0 Z1 Z3 Z6
+
+    The logical state is in the first qubit register of block.
+
+    :param state: A QuantumState representing the qubit state to be encoded.
+    :param block: A list of integers indicating the locations of the qubits in the block.
+    :param perr: a float representing the noise strength in a circuit-level noise model.
+
+    :return: A QuantumState representing the updated state where qubit block[0] has been
+            encoded into the qubits of block.
+    """
+
+    schedule = [
+        [(1, 5), (2, 6)],
+        [(2, 0), (3, 5)],
+        [(1, 0), (2, 4), (3, 6)],
+        [(1, 4), (0, 5)],
+        [(0, 6), (3, 4)],
+    ]
+
+    # Still needs ****NOISE****
+    for round in schedule:
+        for pair in round:
+            CNOT(pair[0], pair[1]).update_quantum_state(state)
+
+    # Rotate everything to the Z-basis
+    for qub in range(1, 4):
+        H(block[qub]).update_quantum_state(state)
 
     return state
 
