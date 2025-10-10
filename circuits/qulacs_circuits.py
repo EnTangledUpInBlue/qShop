@@ -5,22 +5,31 @@ from qulacs.gate import CNOT, H, RY, S, Sdag, P0
 
 # from qulacs.gate import X, Y, Z, P0
 from qulacs.gate import DepolarizingNoise, TwoQubitDepolarizingNoise
+from circuits.circuit_tools import repetition_encoding_schedule
+from codes.decoders import bit_strings
 
 __all__ = [
-    "encoded_controlled_hadamard",
-    "encoded_controlled_y",
-    "magic_state_initialization",
+    "encoded_chad",
+    "encoded_cy",
+    "magic_state_init",
     "repetition_encoder",
     "steane_encoder",
-    "noisy_controlled_hadamard",
-    "noisy_controlled_y",
-    "noisy_magic_state_initialization",
+    "noisy_encoded_chad",
+    "noisy_encoded_cy",
+    "noisy_magic_state_init",
     "noisy_repetition_encoder",
     "noisy_steane_encoder",
 ]
 
 
-def encoded_controlled_hadamard(
+def print_nonzeros(state: QuantumState):
+    outs = bit_strings(state.get_qubit_count())
+    for s in outs:
+        if state.get_marginal_probability(s) > 1e-5:
+            print(s)
+
+
+def encoded_chad(
     state: QuantumState, control_block: list[int], target_block: list[int]
 ) -> QuantumState:
     r"""
@@ -50,7 +59,7 @@ def encoded_controlled_hadamard(
     return state
 
 
-def encoded_controlled_y(
+def encoded_cy(
     state: QuantumState, control_block: list[int], target_block: list[int]
 ) -> QuantumState:
     r"""
@@ -78,7 +87,7 @@ def encoded_controlled_y(
     return state
 
 
-def magic_state_initialization(
+def magic_state_init(
     state: QuantumState, qubit: int, angle=np.pi / 4.0
 ) -> QuantumState:
     r"""
@@ -99,6 +108,22 @@ def magic_state_initialization(
     return state
 
 
+def plus_state_init(state: QuantumState, qubit: int) -> QuantumState:
+    r"""
+    Function that updates a QuantumState by initializing a given qubit into
+    the Hadamard eigenstate
+
+    |H_+> = cos(angle/2) |0> + sin(angle/2) |1>
+
+    """
+
+    # Initialize register in the |+> state
+    P0(qubit).update_quantum_state(state)
+    H(qubit).update_quantum_state(state)
+
+    return state
+
+
 def repetition_encoder(
     state: QuantumState, block: list[int], flag=False
 ) -> QuantumState:
@@ -114,36 +139,46 @@ def repetition_encoder(
             encoded into the qubits of block.
     """
 
-    n = state.get_qubit_count()
+    schedule = repetition_encoding_schedule(block)
 
-    # NOTE: The flagged version of the circuit is not working as expected.
     if flag:
         anc = QuantumState(1)
-        state = tensor_product(state, anc)
-        block.append(n)
+        anc.set_zero_state()
+        state = tensor_product(anc, state)
 
-    block_length = len(block)
+        # modifications to the cnot schedule for including the flag qubit with
+        # considerations for circuit-level noise
 
-    first_half = block[: int(block_length / 2)]
-    second_half = block[int(block_length / 2) :]
+        mark = int(len(block) / 2)
+        flag_label = int(state.get_qubit_count()) - 1
 
-    CNOT(first_half[0], second_half[0]).update_quantum_state(state)
+        print(flag_label)
 
-    for ii in range(len(first_half) - 1):
+        if len(block) % 2:
+            schedule[-1].append((block[mark - 1], flag_label))
+        else:
+            schedule.append([(block[mark - 1], flag_label)])
 
-        CNOT(first_half[ii], first_half[ii + 1]).update_quantum_state(state)
-        CNOT(second_half[ii], second_half[ii + 1]).update_quantum_state(state)
+        schedule.append([(block[-1], flag_label)])
 
-    if block_length % 2:
-        CNOT(second_half[-2], second_half[-1]).update_quantum_state(state)
+    print(schedule)
+    print()
+    print_nonzeros(state)
+
+    for round in schedule:
+        for pair in round:
+            control = pair[0]
+            target = pair[1]
+
+            CNOT(control, target).update_quantum_state(state)
+
+            print(control, target)
+            print_nonzeros(state)
+            print()
 
     if flag:
-        CNOT(first_half[-1], second_half[-1]).update_quantum_state(state)
-        # print(first_half[-1], second_half[-1])
-
-    if flag:
-        state = drop_qubit(state, [block[-1]], [0])
-        block.remove(n)
+        # Post-select on trivial outcome
+        state = drop_qubit(state, [flag_label], [0])
 
     return state
 
@@ -180,7 +215,7 @@ def steane_encoder(state: QuantumState, block: list[int]) -> QuantumState:
     return state
 
 
-def noisy_controlled_hadamard(
+def noisy_encoded_chad(
     state: QuantumState, control_block: list[int], target_block: list[int], perr: float
 ) -> QuantumState:
     r"""
@@ -226,7 +261,7 @@ def noisy_controlled_hadamard(
     return state
 
 
-def noisy_controlled_y(
+def noisy_encoded_cy(
     state: QuantumState, control_block: list[int], target_block: list[int], perr: float
 ) -> QuantumState:
     r"""
@@ -269,7 +304,7 @@ def noisy_controlled_y(
     return state
 
 
-def noisy_magic_state_initialization(
+def noisy_magic_state_init(
     state: QuantumState, qubit: int, perr: float, angle=np.pi / 4.0
 ) -> QuantumState:
     r"""
