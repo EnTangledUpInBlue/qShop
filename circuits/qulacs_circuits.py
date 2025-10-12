@@ -18,6 +18,7 @@ __all__ = [
     "noisy_encoded_cy",
     "noisy_magic_state_init",
     "noisy_repetition_encoder",
+    "noisy_steane_decoder",
     "noisy_steane_encoder",
 ]
 
@@ -162,8 +163,8 @@ def repetition_encoder(
         schedule.append([(block[-1], flag_label)])
 
     print(schedule)
-    print()
-    print_nonzeros(state)
+    # print()
+    # print_nonzeros(state)
 
     for round in schedule:
         for pair in round:
@@ -172,9 +173,9 @@ def repetition_encoder(
 
             CNOT(control, target).update_quantum_state(state)
 
-            print(control, target)
-            print_nonzeros(state)
-            print()
+            # print(control, target)
+            # print_nonzeros(state)
+            # print()
 
     if flag:
         # Post-select on trivial outcome
