@@ -162,20 +162,12 @@ def repetition_encoder(
 
         schedule.append([(block[-1], flag_label)])
 
-    print(schedule)
-    # print()
-    # print_nonzeros(state)
-
     for round in schedule:
         for pair in round:
             control = pair[0]
             target = pair[1]
 
             CNOT(control, target).update_quantum_state(state)
-
-            # print(control, target)
-            # print_nonzeros(state)
-            # print()
 
     if flag:
         # Post-select on trivial outcome
