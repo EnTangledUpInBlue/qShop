@@ -153,8 +153,6 @@ def repetition_encoder(
         mark = int(len(block) / 2)
         flag_label = int(state.get_qubit_count()) - 1
 
-        print(flag_label)
-
         if len(block) % 2:
             schedule[-1].append((block[mark - 1], flag_label))
         else:
@@ -336,113 +334,58 @@ def noisy_repetition_encoder(
             encoded into the logical state of the block.
     """
 
-    n = state.get_qubit_count()
-
-    # print(n)
+    schedule = repetition_encoding_schedule(block)
 
     if flag:
         anc = QuantumState(1)
-        state = tensor_product(state, anc)
-        block.append(n)
+        anc.set_zero_state()
+        state = tensor_product(anc, state)
 
-    # noise on initialized registers
-    for q in block[1:]:
-        DepolarizingNoise(q, perr).update_quantum_state(state)
+        # modifications to the cnot schedule for including the flag qubit with
+        # considerations for circuit-level noise
 
-    # break repetition block in half
-    block_length = len(block)
-    first_half = block[: int(block_length / 2)]
-    second_half = block[int(block_length / 2) :]
+        mark = int(len(block) / 2)
+        flag_label = int(state.get_qubit_count()) - 1
 
-    CNOT(first_half[0], second_half[0]).update_quantum_state(state)
+        if len(block) % 2:
+            schedule[-1].append((block[mark - 1], flag_label))
+        else:
+            schedule.append([(block[mark - 1], flag_label)])
 
-    TwoQubitDepolarizingNoise(first_half[0], second_half[0], perr).update_quantum_state(
-        state
-    )
+        schedule.append([(block[-1], flag_label)])
 
-    for q in first_half[1:] + second_half[1:]:
-        DepolarizingNoise(q, perr).update_quantum_state(state)
+    # set of active qubit in the circuit. Only the first qubit
+    # initialized at this point
 
-    for ii in range(len(first_half) - 1):
+    active_set = set([block[0]])
 
-        CNOT(first_half[ii], first_half[ii + 1]).update_quantum_state(state)
-        CNOT(second_half[ii], second_half[ii + 1]).update_quantum_state(state)
-
-        for jj in range(len(second_half)):
-            if jj not in [ii, ii + 1]:
-                DepolarizingNoise(second_half[jj], perr).update_quantum_state(state)
-                if jj < len(first_half):
-                    DepolarizingNoise(first_half[jj], perr).update_quantum_state(state)
-
-    if block_length % 2:
-        CNOT(second_half[-2], second_half[-1]).update_quantum_state(state)
-        TwoQubitDepolarizingNoise(
-            second_half[-2], second_half[-1], perr
-        ).update_quantum_state(state)
-
-        for q in first_half + second_half[:-2]:
-            DepolarizingNoise(q, perr).update_quantum_state(state)
-
-    if flag:
-        CNOT(first_half[-1], second_half[-1]).update_quantum_state(state)
-        TwoQubitDepolarizingNoise(
-            first_half[-1], second_half[-1], perr
-        ).update_quantum_state(state)
-
-        for q in first_half[:-1] + second_half[:-1]:
-            DepolarizingNoise(q, perr).update_quantum_state(state)
-
-    if flag:
-        # noisy flag qubit measurement
-        DepolarizingNoise(n, perr).update_quantum_state(state)
-        # state = drop_qubit(state,[n],[0]) # post-select on trivial outcome
-        block.remove(n)
-        P0(n).update_quantum_state(state)
-
-    return state
-
-
-def noisy_steane_decoder(
-    state: QuantumState, block: list[int], perr: float
-) -> QuantumState:
-    r"""
-    Decoder circuit for the Steane code. Leaves the last six
-    qubit registers of block in the following
-    Steane code stabilizers
-
-    X0 X1 X4 X5
-    X0 X2 X4 X6
-    X3 X4 X5 X6
-    Z1 Z2 Z3 Z4
-    Z0 Z2 Z3 Z5
-    Z0 Z1 Z3 Z6
-
-    The logical state is in the first qubit register of block.
-
-    :param state: A QuantumState representing the qubit state to be encoded.
-    :param block: A list of integers indicating the locations of the qubits in the block.
-    :param perr: a float representing the noise strength in a circuit-level noise model.
-
-    :return: A QuantumState representing the updated state where qubit block[0] has been
-            encoded into the qubits of block.
-    """
-
-    schedule = [
-        [(1, 5), (2, 6)],
-        [(2, 0), (3, 5)],
-        [(1, 0), (2, 4), (3, 6)],
-        [(1, 4), (0, 5)],
-        [(0, 6), (3, 4)],
-    ]
-
-    # Still needs ****NOISE****
     for round in schedule:
-        for pair in round:
-            CNOT(pair[0], pair[1]).update_quantum_state(state)
+        # set of qubits active in this round
+        round_set = set()
 
-    # Rotate everything to the Z-basis
-    for qub in range(1, 4):
-        H(block[qub]).update_quantum_state(state)
+        for pair in round:
+            round_set = round_set.union(set(pair))
+
+            for qubit in pair:
+                if qubit not in active_set:
+                    DepolarizingNoise(qubit, perr).update_quantum_state(state)
+                    active_set.add(qubit)
+
+            control = pair[0]
+            target = pair[1]
+
+            CNOT(control, target).update_quantum_state(state)
+            TwoQubitDepolarizingNoise(control, target, perr).update_quantum_state(state)
+
+        idle_set = active_set - round_set
+
+        # Apply noise to idle qubits in this round
+        for idler in idle_set:
+            DepolarizingNoise(idler, perr).update_quantum_state(state)
+
+    if flag:
+        # Post-select on trivial outcome
+        state = drop_qubit(state, [flag_label], [0])
 
     return state
 
