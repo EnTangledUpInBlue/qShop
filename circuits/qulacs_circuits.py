@@ -413,7 +413,7 @@ def noisy_steane_decoder(
             encoded into the qubits of block.
     """
 
-    schedule = [
+    cnot_schedule = [
         [(1, 5), (2, 6)],
         [(2, 0), (3, 5)],
         [(1, 0), (2, 4), (3, 6)],
@@ -421,12 +421,40 @@ def noisy_steane_decoder(
         [(0, 6), (3, 4)],
     ]
 
-    # Still needs ****NOISE****
-    for round in schedule:
-        for pair in round:
-            CNOT(pair[0], pair[1]).update_quantum_state(state)
+    msmt_schedule = [[], [], [2], [1, 5], [0, 3, 4, 6]]
 
-    # Rotate everything to the Z-basis
+    print(msmt_schedule)
+
+    measured_set = set()
+    block_set = set(block)
+
+    for rnd in range(len(cnot_schedule)):
+        print(msmt_schedule[rnd])
+
+        round = cnot_schedule[rnd]
+        idle_set = block_set - measured_set
+
+        for pair in round:
+
+            idle_set = idle_set - set(pair)
+
+            control = pair[0]
+            target = pair[1]
+            CNOT(control, target).update_quantum_state(state)
+            TwoQubitDepolarizingNoise(control, target, perr)
+
+        for idler in idle_set:
+            DepolarizingNoise(idler, perr).update_quantum_state(state)
+
+        # add qubits to be measured to the measured set
+        # and apply noise
+        for qub in msmt_schedule[rnd]:
+            measured_set.add(qub)
+            DepolarizingNoise(qub, perr).update_quantum_state(state)
+
+    # Rotate x-stabilizer qubits to the Z-basis. Noise is not applied here since
+    # we applied already and circuit-level noise affects x- and z-msmts
+    # uniformly (so the hadamard is ideal)
     for qub in range(1, 4):
         H(block[qub]).update_quantum_state(state)
 
