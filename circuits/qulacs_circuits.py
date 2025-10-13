@@ -384,6 +384,7 @@ def noisy_repetition_encoder(
             DepolarizingNoise(idler, perr).update_quantum_state(state)
 
     if flag:
+        DepolarizingNoise(flag_label, perr).update_quantum_state(state)
         # Post-select on trivial outcome
         state = drop_qubit(state, [flag_label], [0])
 
