@@ -353,28 +353,30 @@ def noisy_repetition_encoder(
     # set of active qubits in the circuit
     active_set = set([block[0]])
 
+    # Initialization noise for qubits in rest of block
+    for qub in block[1:]:
+        DepolarizingNoise(qub, perr).update_quantum_state(state)
+
     for round in schedule:
         # set of qubits active in this round
         round_set = set()
         for pair in round:
+            # add qubits in the pair to the active set
+            # if not already there
+            active_set = active_set.union(set(pair))
+
+            # add qubits in the pair to the round set
             round_set = round_set.union(set(pair))
-
-            # First determine if qubits need initialization
-            for qubit in pair:
-
-                if qubit not in active_set:
-                    DepolarizingNoise(qubit, perr).update_quantum_state(state)
-                    active_set.add(qubit)
 
             # Apply noisy CNOT to pair
             control = pair[0]
             target = pair[1]
 
             CNOT(control, target).update_quantum_state(state)
+            TwoQubitDepolarizingNoise(control, target).update_quantum_state(state)
 
         # Apply noise to idle qubits in this round
         idle_set = active_set - round_set
-
         for idler in idle_set:
             DepolarizingNoise(idler, perr).update_quantum_state(state)
 
@@ -457,10 +459,37 @@ def noisy_steane_encoder(
     for qub in range(1, 4):
         H(block[qub]).update_quantum_state(state)
 
-    # Following the convention in FIG. 3.
-    # Still needs ****NOISE****
+    # Apply initialization noise, so noise will not be applied as
+    # qubits are made active.
+
+    for qub in block[1:]:
+        DepolarizingNoise(qub, perr).update_quantum_state(state)
+
+    # Which qubits are active in the state and should
+    # be acted on with noise in each round
+
+    active_set = set([block[0]])
+
     for round in schedule:
+        round_set = set()
+
         for pair in round:
-            CNOT(pair[0], pair[1]).update_quantum_state(state)
+            # add qubits in the pair to the active set
+            # if not already there
+            active_set = active_set.union(set(pair))
+
+            # add qubits in the pair to the round set
+            round_set = round_set.union(set(pair))
+
+            control = pair[0]
+            target = pair[1]
+
+            CNOT(control, target).update_quantum_state(state)
+            TwoQubitDepolarizingNoise(control, target, perr).update_quantum_state(state)
+
+        # Identify idling qubits and apply noise
+        idle_set = active_set - round_set
+        for idler in idle_set:
+            DepolarizingNoise(idler, perr).update_quantum_state(state)
 
     return state
