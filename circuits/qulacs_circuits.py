@@ -336,68 +336,52 @@ def noisy_repetition_encoder(
             encoded into the logical state of the block.
     """
 
-    n = state.get_qubit_count()
-
-    # print(n)
+    schedule = repetition_encoding_schedule(block)
 
     if flag:
-        anc = QuantumState(1)
-        state = tensor_product(state, anc)
-        block.append(n)
+        mark = int(len(block) / 2)
 
-    # noise on initialized registers
-    for q in block[1:]:
-        DepolarizingNoise(q, perr).update_quantum_state(state)
+        flag_label = int(max(block)) + 1
 
-    # break repetition block in half
-    block_length = len(block)
-    first_half = block[: int(block_length / 2)]
-    second_half = block[int(block_length / 2) :]
+        if len(block) % 2:
+            schedule[-1].append((block[mark - 1], flag_label))
+        else:
+            schedule.append([(block[mark - 1], flag_label)])
 
-    CNOT(first_half[0], second_half[0]).update_quantum_state(state)
+        schedule.append([(block[-1], flag_label)])
 
-    TwoQubitDepolarizingNoise(first_half[0], second_half[0], perr).update_quantum_state(
-        state
-    )
+    # set of active qubits in the circuit
+    active_set = set([block[0]])
 
-    for q in first_half[1:] + second_half[1:]:
-        DepolarizingNoise(q, perr).update_quantum_state(state)
+    for round in schedule:
+        # set of qubits active in this round
+        round_set = set()
+        for pair in round:
+            round_set = round_set.union(set(pair))
 
-    for ii in range(len(first_half) - 1):
+            # First determine if qubits need initialization
+            for qubit in pair:
 
-        CNOT(first_half[ii], first_half[ii + 1]).update_quantum_state(state)
-        CNOT(second_half[ii], second_half[ii + 1]).update_quantum_state(state)
+                if qubit not in active_set:
+                    DepolarizingNoise(qubit, perr).update_quantum_state(state)
+                    active_set.add(qubit)
 
-        for jj in range(len(second_half)):
-            if jj not in [ii, ii + 1]:
-                DepolarizingNoise(second_half[jj], perr).update_quantum_state(state)
-                if jj < len(first_half):
-                    DepolarizingNoise(first_half[jj], perr).update_quantum_state(state)
+            # Apply noisy CNOT to pair
+            control = pair[0]
+            target = pair[1]
 
-    if block_length % 2:
-        CNOT(second_half[-2], second_half[-1]).update_quantum_state(state)
-        TwoQubitDepolarizingNoise(
-            second_half[-2], second_half[-1], perr
-        ).update_quantum_state(state)
+            CNOT(control, target).update_quantum_state(state)
 
-        for q in first_half + second_half[:-2]:
-            DepolarizingNoise(q, perr).update_quantum_state(state)
+        # Apply noise to idle qubits in this round
+        idle_set = active_set - round_set
+
+        for idler in idle_set:
+            DepolarizingNoise(idler, perr).update_quantum_state(state)
 
     if flag:
-        CNOT(first_half[-1], second_half[-1]).update_quantum_state(state)
-        TwoQubitDepolarizingNoise(
-            first_half[-1], second_half[-1], perr
-        ).update_quantum_state(state)
-
-        for q in first_half[:-1] + second_half[:-1]:
-            DepolarizingNoise(q, perr).update_quantum_state(state)
-
-    if flag:
-        # noisy flag qubit measurement
-        DepolarizingNoise(n, perr).update_quantum_state(state)
-        # state = drop_qubit(state,[n],[0]) # post-select on trivial outcome
-        block.remove(n)
-        P0(n).update_quantum_state(state)
+        # Measure the flag qubit
+        DepolarizingNoise(flag_label, perr)
+        state = drop_qubit(state, [flag_label], [0])
 
     return state
 
