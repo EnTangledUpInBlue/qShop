@@ -4,9 +4,8 @@ from qulacs.state import tensor_product, drop_qubit
 from qulacs.gate import CNOT, H, RY, S, Sdag, P0
 from qulacs.gate import DepolarizingNoise, TwoQubitDepolarizingNoise
 
-# from qulacs.gate import X, Y, Z, P0
-
 from circuits.circuit_tools import repetition_encoding_schedule
+
 from codes.decoders import bit_strings
 
 __all__ = [
@@ -186,8 +185,6 @@ def repetition_encoder(
         mark = int(len(block) / 2)
         flag_label = int(state.get_qubit_count()) - 1
 
-        # print(flag_label)
-
         if len(block) % 2:
             schedule[-1].append((block[mark - 1], flag_label))
         else:
@@ -332,13 +329,6 @@ def noisy_encoded_chad(
 
     state = noisy_transversal_cnot(state, control_block, target_block, perr)
 
-    # for ii in range(len(target_block)):
-    #     qtarget = target_block[ii]
-    #     qcontrol = control_block[ii]
-    #     CNOT(qcontrol, qtarget).update_quantum_state(state)
-
-    #     TwoQubitDepolarizingNoise(qtarget, qcontrol, perr).update_quantum_state(state)
-
     for ii in range(len(target_block)):
 
         RY(target_block[ii], angle).update_quantum_state(state)
@@ -379,12 +369,7 @@ def noisy_encoded_cy(
         # idling noise on control block
         # DepolarizingNoise(control_block[ii], perr).update_quantum_state(state)
 
-    for ii in range(len(target_block)):
-        qtarget = target_block[ii]
-        qcontrol = control_block[ii]
-
-        CNOT(qcontrol, qtarget).update_quantum_state(state)
-        TwoQubitDepolarizingNoise(qtarget, qcontrol, perr).update_quantum_state(state)
+    state = noisy_transversal_cnot(state, control_block, target_block, perr)
 
     for ii in range(len(target_block)):
         S(target_block[ii]).update_quantum_state(state)

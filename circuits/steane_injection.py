@@ -1,6 +1,6 @@
 import numpy as np
 from qulacs import QuantumState
-from qulacs.gate import H, RY, X, Z, DepolarizingNoise
+from qulacs.gate import H, RY, X, DepolarizingNoise
 from qulacs.state import drop_qubit, tensor_product
 from codes.decoders import bit_strings
 
@@ -15,322 +15,182 @@ from circuits.qulacs_circuits import (
 
 
 __all__ = [
-    "repn_chad_test",
-    "noisy_magic_circuit_A",
-    "noisy_magic_circuit_B",
-    "state_processing_A",
-    "state_processing_B",
+    "repn_had_test",
     "one_double_run",
     "one_single_run",
 ]
 
 
-def repn_chad_test(
+def repn_had_test(
     state: QuantumState,
     steaneBlock: list[int],
     repnBlock: list[int],
     perr: float,
-    idling=False,
+    idling=True,
 ) -> QuantumState:
+    r"""
+    Implementation of an encoded Hadamard test with repetition-repetition
+    encoded ancilla under circuit-level noise, with optional idling noise.
 
+    """
+
+    # Initialize ancilla qubits and tensor with the input state
     rep_anc = QuantumState(7)
     state = tensor_product(rep_anc, state)
 
+    # Initialize the ancilla in the |+> state:
     state = noisy_plus_state_init(state, repnBlock[0], perr)
+
+    # Encode the ancilla block into 7-qubit repetition code
     state = noisy_repetition_encoder(state, repnBlock, perr, flag=True, idling=idling)
+
+    # Implement the noisy encoded controlled Hadamard between the two blocks
+    # with the steaneBlock as target and repnBlock as control
     state = noisy_encoded_chad(state, repnBlock, steaneBlock, perr, idling=idling)
 
+    # Rotate ancilla qubits into the X-basis for readout. Noise applied first.
     for qub in repnBlock:
-        H(qub).update_quantum_state(state)
         DepolarizingNoise(qub, perr).update_quantum_state(state)
-
-    return state
-
-
-def noisy_magic_circuit_A(
-    steaneBlock: list[int], repnBlock: list[int], perr: float, flag=True
-) -> QuantumState:
-
-    angle = np.pi / 4.0
-
-    num_qubits = len(steaneBlock + repnBlock)
-
-    state = QuantumState(num_qubits)
-    state.set_zero_state()
-
-    state = noisy_magic_state_init(state, steaneBlock[0], perr, angle)
-    state = noisy_plus_state_init(state, repnBlock[0], perr)
-    state = noisy_steane_encoder(state, steaneBlock, perr)
-
-    state = steane_decoder(state, steaneBlock)
-
-    for qub in repnBlock:
         H(qub).update_quantum_state(state)
 
     return state
-
-
-def state_processing_A(
-    state: QuantumState, steaneBlock: list[int], repnBlock: list[int]
-) -> tuple[float]:
-
-    bs7 = [x for x in bit_strings(7) if not sum(x) % 2]
-    bs6 = bit_strings(6)
-
-    angle = np.pi / 4.0
-
-    net_prob = 0
-    err_prob = 0
-    err = 0
-
-    for bs_rep in bs7:
-
-        if drop_qubit(state, repnBlock, list(bs_rep)).get_squared_norm() > 1e-10:
-
-            for bs_steane in bs6:
-
-                bs_state = drop_qubit(
-                    state, steaneBlock[1:] + repnBlock, list(bs_steane + bs_rep)
-                )
-
-                pbs = bs_state.get_squared_norm()
-
-                if pbs > 1e-10:
-                    net_prob += pbs
-
-                    xsynd = bs_steane[:3]
-                    zsynd = bs_steane[3:]
-
-                    if sum(xsynd) == 2:
-                        Z(0).update_quantum_state(bs_state)
-
-                    if sum(zsynd) == 2:
-                        X(0).update_quantum_state(bs_state)
-
-                    RY(steaneBlock[0], -angle).update_quantum_state(bs_state)
-                    H(steaneBlock[0]).update_quantum_state(bs_state)
-
-                    X(steaneBlock[0]).update_quantum_state(bs_state)
-
-                    err_prob += bs_state.get_zero_probability(steaneBlock[0])
-
-                    if bs_state.get_zero_probability(steaneBlock[0]) / pbs > 0.1:
-                        err += pbs
-
-    return net_prob, err_prob, err
-
-
-def noisy_magic_circuit_B(
-    steaneBlock: list[int],
-    repnBlock1: list[int],
-    repnBlock2: list[int],
-    perr: float,
-    flag=True,
-) -> QuantumState:
-
-    angle = np.pi / 4.0
-
-    state = QuantumState(len(steaneBlock))
-    state.set_zero_state()
-
-    state = noisy_magic_state_init(state, steaneBlock[0], perr, angle)
-    state = noisy_steane_encoder(state, steaneBlock, perr)
-
-    state = repn_chad_test(state, steaneBlock, repnBlock1, perr)
-    state = repn_chad_test(state, steaneBlock, repnBlock2, perr)
-
-    state = steane_decoder(state, steaneBlock)
-
-    return state
-
-
-def state_processing_B(
-    state: QuantumState,
-    steaneBlock: list[int],
-    repnBlock1: list[int],
-    repnBlock2: list[int],
-) -> tuple[float]:
-
-    bs7 = [x for x in bit_strings(7) if not sum(x) % 2]
-    bs6 = bit_strings(6)
-
-    angle = np.pi / 4.0
-
-    net_prob = 0
-    err_prob = 0
-    err = 0
-
-    for bs_rep1 in bs7:
-        if drop_qubit(state, repnBlock1, list(bs_rep1)).get_squared_norm() > 1e-10:
-            for bs_rep2 in bs7:
-                if (
-                    drop_qubit(
-                        state, repnBlock1 + repnBlock2, list(bs_rep1 + bs_rep2)
-                    ).get_squared_norm()
-                    > 1e-10
-                ):
-
-                    for bs_steane in bs6:
-
-                        bs_state = drop_qubit(
-                            state,
-                            steaneBlock[1:] + repnBlock1 + repnBlock2,
-                            list(bs_steane + bs_rep1 + bs_rep2),
-                        )
-
-                        pbs = bs_state.get_squared_norm()
-
-                        if pbs > 1e-10:
-                            net_prob += pbs
-
-                            xsynd = bs_steane[:3]
-                            zsynd = bs_steane[3:]
-
-                            if sum(xsynd) == 2:
-                                Z(0).update_quantum_state(bs_state)
-
-                            if sum(zsynd) == 2:
-                                X(0).update_quantum_state(bs_state)
-
-                            RY(steaneBlock[0], -angle).update_quantum_state(bs_state)
-                            H(steaneBlock[0]).update_quantum_state(bs_state)
-
-                            X(steaneBlock[0]).update_quantum_state(bs_state)
-
-                            err_prob += bs_state.get_zero_probability(steaneBlock[0])
-
-                            if (
-                                bs_state.get_zero_probability(steaneBlock[0]) / pbs
-                                > 0.1
-                            ):
-                                err += pbs
-
-    return net_prob, err_prob, err
 
 
 def one_single_run(perr: float) -> tuple[float]:
+    r"""
+    A function for implementing one run of the single post-selected
+    Hadamard-test protocol.
+    First a state is generated from a distribution of circuits under
+    circuit-level noise of strength perr.
+    Then the state is then projected onto the different postselectable
+
+
+    """
 
     steaneBlock = [0, 1, 2, 3, 4, 5, 6]
     repnBlock = [7, 8, 9, 10, 11, 12, 13]
 
-    idling = False
+    # Option to include idling errors or not:
+    idling = True
 
+    # All even parity bit strings of length 7:
     bs7 = [x for x in bit_strings(7) if not sum(x) % 2]
-    bs6 = [x for x in bit_strings(6)]
 
     angle = np.pi / 4.0
 
-    # net_prob = 0
+    # post-selection probability
     ps_prob = 0
+
+    # logical error probability for post-selected states
     err_prob = 0
 
+    # Initialize the state on the steaneBlock to all zeros
     state = QuantumState(len(steaneBlock))
     state.set_zero_state()
 
+    # Rotate first qubit into the |A> state then apply the
+    # Steane encoding map:
     state = noisy_magic_state_init(state, steaneBlock[0], perr, angle)
     state = noisy_steane_encoder(state, steaneBlock, perr, idling=idling)
 
-    state = repn_chad_test(state, steaneBlock, repnBlock, perr, idling=idling)
+    # Perform the encoded Hadamard test:
+    state = repn_had_test(state, steaneBlock, repnBlock, perr, idling=idling)
 
+    # Apply the steane-decoder circuit, with logical qubit mapped to the
+    # first position of the steaneBlock:
+    state = steane_decoder(state, steaneBlock)
+
+    # Rotate the qubit to diagonalize the Hadamard gate
+    RY(steaneBlock[0], -angle).update_quantum_state(state)
+    H(steaneBlock[0]).update_quantum_state(state)
+
+    # Add the probability of an error, corresponding to the
+    # probability of observing |1> in the output:
+    X(steaneBlock[0]).update_quantum_state(state)
+
+    # Look over all post-selected patterns (even bitstrings)
     for bs in bs7:
-        bs_state = drop_qubit(state, repnBlock, list(bs))
-        pbs = bs_state.get_squared_norm()
+        qubit_state = drop_qubit(
+            state, steaneBlock[1:] + repnBlock, [0, 0, 0, 0, 0, 0] + list(bs)
+        )
 
-        if pbs > 1e-10:
-
-            ps_prob += pbs
-
-            bs_state = steane_decoder(bs_state, steaneBlock)
-
-            for steanebs in bs6:
-                qubit_state = drop_qubit(bs_state, steaneBlock[1:], list(steanebs))
-
-                if qubit_state.get_squared_norm() > 1e-8:
-
-                    xsynd = steanebs[:3]
-                    zsynd = steanebs[3:]
-
-                    if sum(xsynd) == 2:
-                        Z(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                    if sum(zsynd) == 2:
-                        X(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                    RY(steaneBlock[0], -angle).update_quantum_state(qubit_state)
-                    H(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                    X(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                    err_prob += qubit_state.get_zero_probability(steaneBlock[0])
+        # Add probability of this outcome to the post-selection probability:
+        ps_prob += qubit_state.get_squared_norm()
+        err_prob += qubit_state.get_zero_probability(steaneBlock[0])
 
     return ps_prob, err_prob
 
 
 def one_double_run(perr: float) -> tuple[float]:
+    r"""
+    A function for implementing one run of the double post-selected
+    Hadamard-test protocol.
+    First a state is generated from a distribution of circuits under
+    circuit-level noise of strength perr.
+    Then the state is then projected onto the different postselectable
+    measurement patterns.
 
+
+    """
     steaneBlock = [0, 1, 2, 3, 4, 5, 6]
     repnBlock = [7, 8, 9, 10, 11, 12, 13]
 
     bs7 = [x for x in bit_strings(7) if not sum(x) % 2]
-    bs6 = [x for x in bit_strings(6)]
 
     angle = np.pi / 4.0
-    idling = False
+    idling = True
 
-    # net_prob = 0
     ps_prob = 0
     err_prob = 0
 
+    # Initialize the steaneBlock to the all zeros state:
     state = QuantumState(len(steaneBlock))
     state.set_zero_state()
 
+    # Rotate first qubit in the steaneBlock to the magic state then
+    # encode the steaneBlock into the Steane codespace:
     state = noisy_magic_state_init(state, steaneBlock[0], perr, angle)
     state = noisy_steane_encoder(state, steaneBlock, perr, idling=idling)
 
-    state = repn_chad_test(state, steaneBlock, repnBlock, perr, idling=idling)
+    # Perform first encoded Hadamard test:
+    state = repn_had_test(state, steaneBlock, repnBlock, perr, idling=idling)
 
+    # Scan over measurement patterns to post-select over:
     for firstbs in bs7:
+
+        # For each pattern project out the repnBlock and take the norm
+        # of the state to determine if a second Hadamard test will be
+        # performed:
+
         bs_state = drop_qubit(state, repnBlock, list(firstbs))
         pbs = bs_state.get_squared_norm()
 
         if pbs > 1e-10:
-            bs_state = repn_chad_test(
+            # Perform second Hadamard test:
+            bs_state = repn_had_test(
                 bs_state, steaneBlock, repnBlock, perr, idling=idling
             )
 
+            # Decode the Steane-encoded state
+            bs_state = steane_decoder(bs_state, steaneBlock)
+
+            # Logical qubit now at first position in steaneBlock
+            # rotate into Hadamard eigenbasis:
+            RY(steaneBlock[0], -angle).update_quantum_state(bs_state)
+            H(steaneBlock[0]).update_quantum_state(bs_state)
+
+            # Flip the logical qubit so that |0> indicates error:
+            X(steaneBlock[0]).update_quantum_state(bs_state)
+
+            # Scan over measurement patterns to post-select over for the
+            # second Hadamard test:
             for secondbs in bs7:
-                sbs_state = drop_qubit(bs_state, repnBlock, list(secondbs))
-                psbs = sbs_state.get_squared_norm()
-
-                if psbs > 1e-10:
-
-                    ps_prob += psbs
-
-                    sbs_state = steane_decoder(sbs_state, steaneBlock)
-
-                    for thirdbs in bs6:
-                        qubit_state = drop_qubit(
-                            sbs_state, steaneBlock[1:], list(thirdbs)
-                        )
-                        psts = qubit_state.get_squared_norm()
-
-                        if psts > 1e-10:
-                            # net_prob += psts
-
-                            xsynd = thirdbs[:3]
-                            zsynd = thirdbs[3:]
-
-                            if sum(xsynd) == 2:
-                                Z(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                            if sum(zsynd) == 2:
-                                X(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                            RY(steaneBlock[0], -angle).update_quantum_state(qubit_state)
-                            H(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                            X(steaneBlock[0]).update_quantum_state(qubit_state)
-
-                            err_prob += qubit_state.get_zero_probability(steaneBlock[0])
+                qubit_state = drop_qubit(
+                    bs_state,
+                    steaneBlock[1:] + repnBlock,
+                    [0, 0, 0, 0, 0, 0] + list(secondbs),
+                )
+                ps_prob += qubit_state.get_squared_norm()
+                err_prob += qubit_state.get_zero_probability(steaneBlock[0])
 
     return ps_prob, err_prob
