@@ -27,10 +27,19 @@ __all__ = [
 ]
 
 
-def print_nonzeros(state: QuantumState):
+def print_nonzeros(state: QuantumState, thresh=1e-5):
+    r"""
+    Prints out all computational basis states with marginal probability
+    greater than the threshold specified for being observed when the
+    QuantumState state is measured.
+
+    :param state:
+    :param thresh:
+    """
+
     outs = bit_strings(state.get_qubit_count())
     for s in outs:
-        if state.get_marginal_probability(s) > 1e-5:
+        if state.get_marginal_probability(s) > thresh:
             print(s)
 
 
@@ -129,6 +138,12 @@ def magic_state_init(
 
     |H_+> = cos(angle/2) |0> + sin(angle/2) |1>
 
+    :param state:
+    :param qubit:
+    :param angle:
+
+    :return:
+
     """
 
     # Initialize register in the |+> state
@@ -148,6 +163,10 @@ def plus_state_init(state: QuantumState, qubit: int) -> QuantumState:
 
     |H_+> = cos(angle/2) |0> + sin(angle/2) |1>
 
+    :param state:
+    :param qubit:
+
+    :return:
     """
 
     # Initialize register in the |+> state
@@ -285,6 +304,20 @@ def steane_decoder(state: QuantumState, block: list[int]) -> QuantumState:
 def noisy_transversal_cnot(
     state: QuantumState, control_block: list[int], target_block: list[int], perr: float
 ) -> QuantumState:
+    r"""
+    Updates the input state with a transversal Hadamard performed
+    between the control_block and target_block.
+
+    :param state:
+    :param control_block:
+    :param target_block:
+    :param perr:
+
+    :return:
+    """
+
+    assert len(control_block) == len(target_block)
+
     for ii in range(len(target_block)):
         qtarget = target_block[ii]
         qcontrol = control_block[ii]
@@ -410,10 +443,15 @@ def noisy_magic_state_init(
 def noisy_plus_state_init(state: QuantumState, qubit: int, perr: float) -> QuantumState:
     r"""
     Function that updates a QuantumState by initializing a given qubit into
-    the Hadamard eigenstate
+    the Hadamard eigenstate:
 
     |H_+> = cos(angle/2) |0> + sin(angle/2) |1>
 
+    :param state:
+    :param qubit:
+    :param perr:
+
+    :return:
     """
 
     # Initialize register in the |+> state

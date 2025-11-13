@@ -29,8 +29,8 @@ def repn_had_test(
     idling=True,
 ) -> QuantumState:
     r"""
-    Implementation of an encoded Hadamard test with repetition-repetition
-    encoded ancilla under circuit-level noise, with optional idling noise.
+    Implementation of an encoded Hadamard test with repetition-encoded
+    ancilla under circuit-level noise, with optional idling noise.
 
     """
 
@@ -63,7 +63,7 @@ def one_single_run(perr: float) -> tuple[float]:
     First a state is generated from a distribution of circuits under
     circuit-level noise of strength perr.
     Then the state is then projected onto the different postselectable
-
+    outcomes.
 
     """
 
