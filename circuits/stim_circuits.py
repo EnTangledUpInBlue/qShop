@@ -323,7 +323,10 @@ def noisy_encoded_cy(
 
     Y = S X S^dag
 
-    :param:
+    :param circuit:
+    :param target_block:
+    :param control_block:
+    :param perr:
 
     :return:
     """
